@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use utils::{map_float, radians_to_degrees, rotate, Axis, Corner3 as C3,
-            CubeFace, P3, R3, V2, V3, V4, copy_p3_to};
+            CubeFace, P2, P3, R3, V2, V3, V4, copy_p3_to};
 use errors::{ChainError, RotationError, SnakeError};
 use failure::Error;
 
@@ -125,6 +125,10 @@ pub trait MinMaxCoord {
 
     fn midpoint(&self, axis: Axis) -> f32 {
         0.5 * (self.max_coord(axis) + self.min_coord(axis))
+    }
+
+    fn midpoint2(&self) -> P2 {
+        P2::new(self.midpoint(Axis::X), self.midpoint(Axis::Y))
     }
 
     fn midpoint3(&self) -> P3 {
@@ -525,6 +529,30 @@ impl ColorSpec {
     }
 }
 
+impl MinMaxCoord for P2 {
+    fn all_coords(&self, axis: Axis) -> Vec<f32> {
+        vec![
+            match axis {
+                Axis::X => self.x,
+                Axis::Y => self.y,
+                Axis::Z => panic!("P2 has no z coordinate"),
+            },
+        ]
+    }
+}
+
+impl MinMaxCoord for P3 {
+    fn all_coords(&self, axis: Axis) -> Vec<f32> {
+        vec![
+            match axis {
+                Axis::X => self.x,
+                Axis::Y => self.y,
+                Axis::Z => self.z,
+            },
+        ]
+    }
+}
+
 impl<S, T> MinMaxCoord for (S, T)
 where
     S: MinMaxCoord,
@@ -537,6 +565,19 @@ where
     }
 }
 
+
+impl<T> MinMaxCoord for Vec<T>
+where
+    T: MinMaxCoord,
+{
+    fn all_coords(&self, axis: Axis) -> Vec<f32> {
+        let mut v = Vec::new();
+        for thing in self.iter() {
+            v.extend(thing.all_coords(axis))
+        }
+        v
+    }
+}
 
 impl<T> MinMaxCoord for [T; 3]
 where

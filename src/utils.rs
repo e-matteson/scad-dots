@@ -1,12 +1,13 @@
 use std::f32;
 use std::f32::consts::PI;
-use nalgebra::{Point3, Unit, UnitQuaternion, Vector2, Vector3, Vector4};
+use nalgebra::{Point2, Point3, Unit, UnitQuaternion, Vector2, Vector3, Vector4};
 pub use nalgebra::distance;
 
 pub use errors::{ArgError, RatioError, RotationError};
 use failure::{Error, Fail};
 
 pub type P3 = Point3<f32>;
+pub type P2 = Point2<f32>;
 pub type V2 = Vector2<f32>;
 pub type V3 = Vector3<f32>;
 pub type V4 = Vector4<f32>;
