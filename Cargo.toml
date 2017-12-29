@@ -1,0 +1,16 @@
+[package]
+name = "scad-dots"
+version = "0.1.0"
+authors = ["e-matteson <e.r.matteson@gmail.com>"]
+
+[dependencies]
+
+scad-dots-derive = { path = "scad-dots-derive" }
+scad_generator = {git = "https://github.com/TheZoq2/Rust-Scad.git"}
+nalgebra = "0.13.*"
+approx = "0.1.*"
+failure = "0.1.*"
+
+[dependencies.nom]
+version = "3.2.*"
+features = ["verbose-errors"]

@@ -1,0 +1,11 @@
+[package]
+name = "scad-dots-derive"
+version = "0.1.0"
+authors = ["e-matteson <e.r.matteson@gmail.com>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "*"
+quote = "*"
