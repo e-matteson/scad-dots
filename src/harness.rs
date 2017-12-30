@@ -16,14 +16,14 @@ use parse::scad_relative_eq;
 pub static MAX_RELATIVE: f32 = 0.00001;
 
 /// What action to perform on this test case.
-/// Normally, only `Run` will be used. Others are for temporary use.
+/// Normally, only `Test` will be used. Others are for temporary use.
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum Action {
-    Run,
+    Test,
     Create,
-    View,
-    ViewPass,
+    ViewBoth,
+    Preview,
     PrintMedium,
     PrintHigh,
 }
@@ -35,6 +35,13 @@ enum GoodOrBad {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+pub fn preview_model(tree: &Tree) -> Result<(), Error> {
+    let scad = render_model(tree, RenderQuality::Low)?;
+    let path = save_temp_file("preview", "", &scad)?;
+    view_in_openscad(&[path])
+}
+
 
 pub fn check_model<F>(name: &str, action: Action, f: F)
 where
@@ -68,7 +75,7 @@ where
             let path = save_temp_file("print-high", name, &actual)?;
             view_in_openscad(&[path])?;
         }
-        Action::View => {
+        Action::ViewBoth => {
             let actual = render_model(&tree, RenderQuality::Low)?;
             let mut paths = Vec::new();
             paths.push(save_temp_file("actual", name, &actual)?);
@@ -76,9 +83,9 @@ where
                 paths.push(save_temp_file("expected", name, &expected)?);
             }
             view_in_openscad(&paths)?;
-            return Err(TestError::View.into());
+            return Err(TestError::ViewBoth.into());
         }
-        Action::ViewPass => {
+        Action::Preview => {
             let actual = render_model(&tree, RenderQuality::Low)?;
             let path = save_temp_file("actual", name, &actual)?;
             view_in_openscad(&[path])?;
@@ -89,7 +96,7 @@ where
             save_file(&name_to_path(name, GoodOrBad::Good), &actual)?;
             return Err(TestError::Create.into());
         }
-        Action::Run => {
+        Action::Test => {
             let actual = render_model(&tree, RenderQuality::Low)?;
             let expected = load_model(name)?;
             if !scad_relative_eq(&actual, &expected, MAX_RELATIVE)? {
@@ -120,7 +127,10 @@ fn load_model(name: &str) -> Result<String, Error> {
     Ok(s)
 }
 
-fn render_model(tree: &Tree, render_options: RenderQuality) -> Result<String, Error> {
+fn render_model(
+    tree: &Tree,
+    render_options: RenderQuality,
+) -> Result<String, Error> {
     to_code(tree, render_options)
 }
 
@@ -131,7 +141,11 @@ fn save_file(path: &str, data: &str) -> Result<(), Error> {
     Ok(())
 }
 
-fn save_temp_file(id: &str, test_name: &str, code: &str) -> Result<(String), Error> {
+fn save_temp_file(
+    id: &str,
+    test_name: &str,
+    code: &str,
+) -> Result<(String), Error> {
     let path = format!("tests/tmp/{}_{}.scad", id, test_name);
     save_file(&path, code).context("failed to save temporary .scad file")?;
     Ok(path)
@@ -140,7 +154,9 @@ fn save_temp_file(id: &str, test_name: &str, code: &str) -> Result<(String), Err
 fn save_incorrect(name: &str, code: &str) -> Result<(), Error> {
     let path = name_to_path(name, GoodOrBad::Bad);
     println!("Saving incorrect model as: '{}'", path);
-    println!("****************************************************************");
+    println!(
+        "****************************************************************"
+    );
     save_file(&path, code)
 }
 
