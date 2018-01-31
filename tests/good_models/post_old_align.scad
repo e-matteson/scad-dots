@@ -1,0 +1,18 @@
+$fn=7;
+hull()
+{
+	translate([-1,-1,-2])
+	{
+		rotate(0,[0,0,1])
+		{
+			cylinder(h=2,d=2);
+		}
+	}
+	translate([-1,-1,3])
+	{
+		rotate(0,[0,0,1])
+		{
+			sphere(d=2);
+		}
+	}
+}

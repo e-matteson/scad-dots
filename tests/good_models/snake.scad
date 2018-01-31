@@ -1,0 +1,55 @@
+$fn=5;
+union()
+{
+	hull()
+	{
+		translate([-2,-2,-2])
+		{
+			rotate(0,[0,0,1])
+			{
+				cube([2,2,2]);
+			}
+		}
+		translate([-7,-2,-2])
+		{
+			rotate(0,[0,0,1])
+			{
+				cube([2,2,2]);
+			}
+		}
+	}
+	hull()
+	{
+		translate([-7,-2,-2])
+		{
+			rotate(0,[0,0,1])
+			{
+				cube([2,2,2]);
+			}
+		}
+		translate([-7,-2,5])
+		{
+			rotate(0,[0,0,1])
+			{
+				cube([2,2,2]);
+			}
+		}
+	}
+	hull()
+	{
+		translate([-7,-2,5])
+		{
+			rotate(0,[0,0,1])
+			{
+				cube([2,2,2]);
+			}
+		}
+		translate([-7,-12,5])
+		{
+			rotate(0,[0,0,1])
+			{
+				cube([2,2,2]);
+			}
+		}
+	}
+}

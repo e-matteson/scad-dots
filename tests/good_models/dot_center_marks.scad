@@ -1,0 +1,53 @@
+$fn=7;
+union()
+{
+	translate([0,0,0])
+	{
+		rotate(0,[0,0,1])
+		{
+			cube([20,20,20]);
+		}
+	}
+	translate([0,10,10])
+	{
+		rotate(0,[0,0,1])
+		{
+			sphere(d=1);
+		}
+	}
+	translate([20,10,10])
+	{
+		rotate(0,[0,0,1])
+		{
+			sphere(d=2);
+		}
+	}
+	translate([10,0,10])
+	{
+		rotate(0,[0,0,1])
+		{
+			sphere(d=3);
+		}
+	}
+	translate([10,20,10])
+	{
+		rotate(0,[0,0,1])
+		{
+			sphere(d=4);
+		}
+	}
+	translate([10,10,0])
+	{
+		rotate(0,[0,0,1])
+		{
+			sphere(d=5);
+		}
+	}
+	translate([10,10,20])
+	{
+		rotate(0,[0,0,1])
+		{
+			sphere(d=6);
+		}
+	}
+}
