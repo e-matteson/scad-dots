@@ -2,6 +2,7 @@
 #![feature(inclusive_range_syntax)]
 #![feature(slice_rotate)]
 #![allow(unused_doc_comment)] // what does this warning even mean?
+#![allow(unused_parens)] // these are originating from nom macros
 
 extern crate nalgebra;
 

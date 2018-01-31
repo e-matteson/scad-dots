@@ -86,7 +86,6 @@ impl Axis {
     }
 }
 
-
 // TODO why did the From<> versions break after the nalgebra 0.13 update?
 //  Something to do with the Allocator type param?
 //  Into<> works, but is a bit less convenient.
@@ -110,7 +109,6 @@ impl Into<Unit<V3>> for Axis {
         }
     }
 }
-
 
 impl RectEdge {
     pub fn is_high(&self) -> bool {
@@ -192,7 +190,7 @@ impl Corner2 {
             Corner2::P10 => 3,
         };
         let mut v = Corner2::all_clockwise();
-        v.rotate(index);
+        v.rotate_left(index);
         v
     }
 
@@ -206,11 +204,9 @@ impl Corner2 {
             Axis::X => bools.0,
             Axis::Y => bools.1,
             Axis::Z => {
-                return Err(
-                    ArgError
-                        .context("The Z value of a Corner2 is not defined")
-                        .into(),
-                )
+                return Err(ArgError
+                    .context("The Z value of a Corner2 is not defined")
+                    .into())
             }
         })
     }
@@ -529,7 +525,6 @@ pub fn sin_deg(degrees: f32) -> f32 {
 pub fn cos_deg(degrees: f32) -> f32 {
     f32::cos(degrees_to_radians(degrees))
 }
-
 
 pub fn relative_less_eq(a: f32, b: f32) -> bool {
     a < b || relative_eq!(a, b, max_relative = MAX_REL)

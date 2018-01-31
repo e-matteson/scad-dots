@@ -290,73 +290,22 @@ fn dot_cyl() {
         Ok(dot![n])
     })
 }
-
-#[test]
-fn cuboid_center() {
-    check_model("cuboid_center", Action::Test, || {
-        let d = CuboidSpecYAxis {
-            pos: P3::origin(),
-            align: CuboidAlign::outside_midpoint(C3::P011, C3::P100),
-            x_dim: 7.,
-            y_vec: V3::new(6., 10., -2.),
-            z_dim: 5.,
-            size: 2.,
-        };
-        let c = Cuboid::new(CuboidShapes::Cube, d)?;
-        c.link(CuboidLink::Dots)
-    })
-}
-
-#[test]
-fn cuboid_y_axis() {
-    check_model("cuboid_y_axis", Action::Test, || {
-        let d = CuboidSpecYAxis {
-            pos: P3::origin(),
-            align: CuboidAlign::inside(C3::P100),
-            x_dim: 7.,
-            y_vec: V3::new(0., -2., 10.),
-            z_dim: 5.,
-            size: 2.,
-        };
-        let c = Cuboid::new(CuboidShapes::Cube, d)?;
-        c.link(CuboidLink::Dots)
-    })
-}
-
-// #[ignore]
-// fn rect_center() {
-//     check_model("rect_center", Action::Test, || {
-//         let d = RectSpecYAxis {
+// // TODO rewrite without SpecYAxis
+// #[test]
+// fn cuboid_center() {
+//     check_model("cuboid_center", Action::Test, || {
+//         let d = CuboidSpecYAxis {
 //             pos: P3::origin(),
-//             align: RectAlign::Midpoint {
-//                 dot_a:  C3::P000,
-//                 rect_a: C2::P00,
-//                 dot_b:  C3::P100,
-//                 rect_b: C2::P10
-//             },
-//             x_dim: 5.,
-//             y_vec: V3::new(0., -2., 10. ),
-//             size: 2.
+//             align: CuboidAlign::outside_midpoint(C3::P011, C3::P100),
+//             x_dim: 7.,
+//             y_vec: V3::new(6., 10., -2.),
+//             z_dim: 5.,
+//             size: 2.,
 //         };
-//         let r = Rect::new(RectShapes::Cube, d)?;
-//         r.link(RectLink::Dots)
+//         let c = Cuboid::new(CuboidShapes::Cube, d)?;
+//         c.link(CuboidLink::Dots)
 //     })
 // }
-
-#[test]
-fn rect_y_axis() {
-    check_model("rect_y_axis", Action::Test, || {
-        let d = RectSpecYAxis {
-            pos: P3::new(10., 0., 5.),
-            align: RectAlign::origin(),
-            x_dim: 5.,
-            y_vec: V3::new(0., -2., 10.),
-            size: 2.,
-        };
-        let r = Rect::new(RectShapes::Cube, d)?;
-        r.link(RectLink::Dots)
-    })
-}
 
 #[test]
 fn simple_rect() {

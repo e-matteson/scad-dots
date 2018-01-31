@@ -24,21 +24,12 @@ pub struct CuboidSpecBasic {
     pub rot: R3,
 }
 
-// TODO separate y_dim and y_axis
-#[derive(Debug, Clone, Copy)]
-pub struct CuboidSpecYAxis {
-    pub pos: P3,
-    pub align: CuboidAlign,
-    pub x_dim: f32,
-    pub y_vec: V3,
-    pub z_dim: f32,
-    pub size: f32,
-}
-
-
 #[derive(Debug, Clone, Copy)]
 pub enum CuboidAlign {
-    Corner { cuboid: C3, dot: C3 },
+    Corner {
+        cuboid: C3,
+        dot: C3,
+    },
     Midpoint {
         cuboid_a: C3,
         dot_a: C3,
@@ -239,13 +230,9 @@ impl Cuboid {
     ) -> Result<Cuboid, Error> {
         if let Shape::Cube = dot.shape {
         } else {
-            return Err(
-                ArgError
-                    .context(
-                        "Cuboid can only be created from a cube-shaped dot",
-                    )
-                    .into(),
-            );
+            return Err(ArgError
+                .context("Cuboid can only be created from a cube-shaped dot")
+                .into());
         }
         let d = CuboidSpecBasic {
             pos: dot.p000,
@@ -258,7 +245,6 @@ impl Cuboid {
         };
         Cuboid::new(shape.into(), d)
     }
-
 
     // pub fn dot_face_protrusions(
     //     dot: Dot,
@@ -439,28 +425,6 @@ impl CuboidSpec for CuboidSpecBasic {
 
     fn into_convertable(self) -> Result<CuboidSpecBasic, Error> {
         Ok(self)
-    }
-}
-
-impl CuboidSpec for CuboidSpecYAxis {
-    type C = CuboidSpecBasic;
-
-    fn into_convertable(self) -> Result<CuboidSpecBasic, Error> {
-        let rot = R3::rotation_between(&self.y_vec, &Axis::Y.into())
-        // .ok_or("failed to get rect's rotation from y-axis")?
-        // TODO handle error!
-            .unwrap()
-            .powf(-1.);
-
-        Ok(CuboidSpecBasic {
-            pos: self.pos,
-            align: self.align,
-            x_dim: self.x_dim,
-            y_dim: self.y_vec.norm(),
-            z_dim: self.z_dim,
-            size: self.size,
-            rot: rot,
-        })
     }
 }
 

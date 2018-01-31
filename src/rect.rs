@@ -1,8 +1,7 @@
-use utils::{midpoint, rotation_between, Axis, Corner2 as C2, Corner3 as C3,
-            CubeFace, P3, R3, V3};
+use utils::{midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3};
 use core::{chain, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape, Tree};
 use errors::MidpointError;
-use failure::{Error, ResultExt};
+use failure::Error;
 
 #[derive(Debug, Clone, Copy, MinMaxCoord, MapDots)]
 pub struct Rect {
@@ -23,25 +22,11 @@ pub struct RectSpecBasic {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct RectSpecYAxis {
-    pub pos: P3,
-    pub align: RectAlign,
-    pub x_dim: f32,
-    pub y_vec: V3,
-    pub size: f32,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct RectSpecThree {
-    pub p00_outside: P3,
-    pub p01_outside: P3,
-    pub p11_outside: P3,
-    pub size: f32,
-}
-
-#[derive(Debug, Clone, Copy)]
 pub enum RectAlign {
-    Corner { rect: C2, dot: C3 },
+    Corner {
+        rect: C2,
+        dot: C3,
+    },
     Midpoint {
         rect_a: C2,
         dot_a: C3,
@@ -62,7 +47,6 @@ pub enum RectShapes {
         p01: Shape,
     },
 }
-
 
 #[derive(Debug, Clone, Copy)]
 pub enum RectLink {
@@ -279,47 +263,6 @@ impl RectSpec for RectSpecBasic {
     }
 }
 
-impl RectSpec for RectSpecYAxis {
-    type T = RectSpecBasic;
-    fn into_convertable(self) -> Result<RectSpecBasic, Error> {
-        let rot = rotation_between(&self.y_vec, &Axis::Y.into())
-            .context("failed to get rect's rotation from y-axis")?
-            .powf(-1.);
-
-        Ok(RectSpecBasic {
-            pos: self.pos,
-            align: self.align,
-            x_dim: self.x_dim,
-            y_dim: self.y_vec.norm(),
-            size: self.size,
-            rot: rot,
-        })
-    }
-}
-
-impl RectSpec for RectSpecThree {
-    type T = RectSpecBasic;
-    fn into_convertable(self) -> Result<RectSpecBasic, Error> {
-        let x_vec = self.p11_outside - self.p01_outside;
-        let y_vec = self.p01_outside - self.p00_outside;
-        let z_vec = x_vec.cross(&y_vec);
-
-        let rot = rotation_between(&z_vec, &Axis::Z.into())
-            .context("failed to get rect's rotation from z-axis")?
-            .powf(-1.);
-
-        Ok(RectSpecBasic {
-            pos: self.p00_outside,
-            align: RectAlign::outside(C3::P000),
-            x_dim: x_vec.norm(),
-            y_dim: y_vec.norm(),
-            size: self.size,
-            rot: rot,
-        })
-    }
-}
-
-
 impl RectAlign {
     pub fn origin() -> RectAlign {
         RectAlign::outside(C3::P000)
@@ -389,7 +332,6 @@ impl RectAlign {
             .expect("got bad corners from CubeFace")
     }
 
-
     pub fn all_corners() -> Vec<RectAlign> {
         let mut v = Vec::new();
         for d in C3::all() {
@@ -416,7 +358,6 @@ impl RectAlign {
         }
     }
 }
-
 
 impl RectShapes {
     pub fn get(&self, corner: C2) -> Shape {
