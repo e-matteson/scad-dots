@@ -9,7 +9,6 @@ use core::Tree;
 use render::{to_code, RenderQuality};
 use errors::{panic_error, TestError};
 
-
 use parse::scad_relative_eq;
 
 // static RENDER_OPTIONS: RenderQuality = RenderQuality::Test;
@@ -42,24 +41,17 @@ pub fn preview_model(tree: &Tree) -> Result<(), Error> {
     view_in_openscad(&[path])
 }
 
-
 pub fn check_model<F>(name: &str, action: Action, f: F)
 where
     F: Fn() -> Result<Tree, Error>,
 {
-    if let Err(e) = test_helper(action, name, &f)
-    // .context(format!("test '{}':", name))
-    {
-        // print_error_chain(e);
-        // println!("ERROR: {}", e);
-        // print_error(e);
+    if let Err(e) = test_helper(name, action, &f) {
         panic_error(e);
-
-        // ::std::process::exit(1);
     }
 }
 
-fn test_helper<F>(action: Action, name: &str, f: F) -> Result<(), Error>
+// TODO let lib user control paths, somehow
+fn test_helper<F>(name: &str, action: Action, f: F) -> Result<(), Error>
 where
     F: Fn() -> Result<Tree, Error>,
 {
