@@ -304,7 +304,14 @@ impl Cuboid {
         self.get_dot(cuboid).pos(dot)
     }
 
+    pub fn rot(&self) -> R3 {
+        // Assumes both the top and bottom rects have the same rotation
+        // (otherwise self was constructed incorrectly)
+        self.top.rot()
+    }
+
     pub fn get_dot(&self, corner: C3) -> Dot {
+        // TODO rename to just dot
         let rect_corner = C2::from(corner);
         if corner.is_high(Axis::Z) {
             self.top.get_dot(rect_corner)

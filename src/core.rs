@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
 use utils::{map_float, radians_to_degrees, rotate, Axis, Corner3 as C3,
-            CubeFace, P2, P3, R3, V2, V3, V4, copy_p3_to};
+            CubeFace, P2, P3, R3, V2, V3, V4, copy_p3_to,
+            translate_p3_along_until};
 use errors::{ChainError, RotationError, SnakeError};
 use failure::Error;
 
@@ -204,8 +205,8 @@ impl Dot {
         }
     }
 
+    /// Make a copy of the dot at the new position.
     pub fn translate_to(&self, pos: P3, align: DotAlign) -> Dot {
-        // Make a copy of the dot at a new position.
         let spec = DotSpec {
             pos: pos,
             align: align,
@@ -213,6 +214,25 @@ impl Dot {
             rot: self.rot,
         };
         Dot::new(self.shape, spec)
+    }
+
+    pub fn translate_along_until(
+        &self,
+        direction: V3,
+        axis: Axis,
+        axis_value: f32,
+    ) -> Dot {
+        Dot {
+            p000: translate_p3_along_until(
+                self.p000,
+                direction,
+                axis,
+                axis_value,
+            ),
+            shape: self.shape,
+            size: self.size,
+            rot: self.rot,
+        }
     }
 
     pub fn with_coord(&self, coordinate: f32, dimension: Axis) -> Dot {

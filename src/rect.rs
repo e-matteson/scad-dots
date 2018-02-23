@@ -1,5 +1,6 @@
 use utils::{midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3};
-use core::{chain, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape, Tree};
+use core::{chain, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
+           Tree};
 use errors::MidpointError;
 use failure::Error;
 
@@ -134,40 +135,6 @@ impl Rect {
         self.get_dot(rect).pos(dot)
     }
 
-    pub fn mark_corners(&self) -> Tree {
-        // for debugging
-        let mut marks = Vec::new();
-        for align in RectAlign::all_corners() {
-            marks.push(mark(self.pos(align), 1.));
-        }
-        Tree::Union(marks)
-    }
-
-    pub fn link(&self, style: RectLink) -> Result<Tree, Error> {
-        Ok(match style {
-            RectLink::Dots => Tree::Union(self.dots()),
-            RectLink::Solid => Tree::Hull(self.dots()),
-            RectLink::Frame => chain(&[
-                self.get_dot(C2::P00),
-                self.get_dot(C2::P01),
-                self.get_dot(C2::P11),
-                self.get_dot(C2::P10),
-                self.get_dot(C2::P00),
-            ])?,
-            RectLink::YPosts => union![
-                hull![self.get_dot(C2::P00), self.get_dot(C2::P01)],
-                hull![self.get_dot(C2::P10), self.get_dot(C2::P11)],
-            ],
-        })
-    }
-
-    fn dots(&self) -> Vec<Tree> {
-        C2::all_clockwise()
-            .into_iter()
-            .map(|c| dot![self.get_dot(c)])
-            .collect()
-    }
-
     pub fn get_dot(&self, corner: C2) -> Dot {
         match corner {
             C2::P00 => self.p00,
@@ -193,6 +160,48 @@ impl Rect {
 
     pub fn dim_len(&self, axis: Axis) -> f32 {
         self.dim_vec(axis).norm()
+    }
+
+    pub fn drop_solid(&self, bottom_z: f32, shape: Option<Shape>) -> Tree {
+        drop_solid(&self.dots(), bottom_z, shape)
+    }
+
+    pub fn mark_corners(&self) -> Tree {
+        // for debugging
+        let mut marks = Vec::new();
+        for align in RectAlign::all_corners() {
+            marks.push(mark(self.pos(align), 1.));
+        }
+        Tree::Union(marks)
+    }
+
+    pub fn link(&self, style: RectLink) -> Result<Tree, Error> {
+        Ok(match style {
+            RectLink::Dots => Tree::Union(self.dots_as_trees()),
+            RectLink::Solid => Tree::Hull(self.dots_as_trees()),
+            RectLink::Frame => chain(&[
+                self.get_dot(C2::P00),
+                self.get_dot(C2::P01),
+                self.get_dot(C2::P11),
+                self.get_dot(C2::P10),
+                self.get_dot(C2::P00),
+            ])?,
+            RectLink::YPosts => union![
+                hull![self.get_dot(C2::P00), self.get_dot(C2::P01)],
+                hull![self.get_dot(C2::P10), self.get_dot(C2::P11)],
+            ],
+        })
+    }
+
+    fn dots(&self) -> Vec<Dot> {
+        C2::all_clockwise()
+            .into_iter()
+            .map(|c| self.get_dot(c))
+            .collect()
+    }
+
+    fn dots_as_trees(&self) -> Vec<Tree> {
+        self.dots().into_iter().map(|d| d.into()).collect()
     }
 }
 

@@ -597,3 +597,53 @@ fn cuboid_corners() {
         Ok(union![r.link(CuboidLink::Frame)?, r.mark_corners()])
     })
 }
+
+#[test]
+fn fancy_translation() {
+    assert_eq!(
+        translate_p3_along_until(
+            P3::new(1., 2., 3.),
+            V3::new(10., 11., 12.),
+            Axis::Z,
+            15.
+        ),
+        P3::new(11., 13., 15.)
+    );
+
+    assert_eq!(
+        translate_p3_along_until(
+            P3::new(1., 2., 3.),
+            V3::new(9., 12., 15.),
+            Axis::X,
+            4.,
+        ),
+        P3::new(4., 6., 8.)
+    );
+
+    assert_eq!(
+        translate_p3_along_until(
+            P3::new(1., -2., 3.),
+            V3::new(9., 12., 15.),
+            Axis::X,
+            -2.,
+        ),
+        P3::new(-2., -6., -2.)
+    );
+}
+
+#[test]
+fn dot_fancy_translation() {
+    check_model("dot_fancy_translation", Action::Test, || {
+        let a = Dot::new(
+            Shape::Cube,
+            DotSpec {
+                pos: P3::new(0., 0., 0.),
+                align: C3::P000.into(),
+                size: 1.0,
+                rot: rotation_between(&Axis::X.into(), &V3::new(1., 1., 0.))?,
+            },
+        );
+        let b = a.translate_along_until(V3::new(9., 12., 15.), Axis::X, -3.);
+        Ok(union![a, b])
+    })
+}

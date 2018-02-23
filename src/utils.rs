@@ -498,6 +498,20 @@ pub fn translate_p3(pos: P3, dist: f32, axis: Axis) -> P3 {
     new_pos
 }
 
+/// Translate the point along the given direction vector, until the given
+/// axis has the given value.
+pub fn translate_p3_along_until(
+    pos: P3,
+    direction: V3,
+    axis: Axis,
+    axis_value: f32,
+) -> P3 {
+    // TODO use consistent arg order with translate_p3
+    let i = axis.index();
+    let m = (axis_value - pos[i]) / direction[i];
+    pos + m * direction
+}
+
 pub fn get_plane_normal(origin: P3, end1: P3, end2: P3) -> V3 {
     (end1 - origin).cross(&(end2 - origin))
 }
