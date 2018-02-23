@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
 use utils::{map_float, radians_to_degrees, rotate, Axis, Corner3 as C3,
-            CubeFace, P2, P3, R3, V2, V3, V4, copy_p3_to,
-            translate_p3_along_until};
+            CubeFace, P2, P3, R3, V2, V3, V4, translate_p3_along_until};
 use errors::{ChainError, RotationError, SnakeError};
 use failure::Error;
 
@@ -169,10 +168,25 @@ impl Dot {
     /// the same size as the original dot. If shape is None, it will have the
     /// same shape as the original.
     pub fn drop(&self, bottom_z: f32, shape: Option<Shape>) -> Dot {
+        self.drop_along(Axis::Z.into(), bottom_z, shape)
+    }
+
+    /// Like `Dot::drop()`, but more general: the new dot will be dropped in the
+    /// given direction, instead of straight down. The new dot's rotation will
+    /// still be reset to sit flat on the z-plane, regardless of direction.
+    pub fn drop_along(
+        &self,
+        direction: V3,
+        bottom_z: f32,
+        shape: Option<Shape>,
+    ) -> Dot {
         // Get the position of the center of the dot
-        let pos = self.pos(DotAlign::center_solid());
-        // Drop its z coordinate.
-        let pos = copy_p3_to(pos, bottom_z, Axis::Z);
+        let pos = translate_p3_along_until(
+            self.pos(DotAlign::center_solid()),
+            direction,
+            Axis::Z,
+            bottom_z,
+        );
 
         // Create a Dot whose bottom face is centered on that position.
         // Reset its rotation.
@@ -203,6 +217,12 @@ impl Dot {
             size: self.size,
             rot: rot * self.rot, // TODO order?
         }
+    }
+
+    pub fn rotate_to(&self, new_rot: R3) -> Dot {
+        // TODO check
+        let rot_difference = self.rot.rotation_to(&new_rot);
+        self.rotate(rot_difference)
     }
 
     /// Make a copy of the dot at the new position.
