@@ -38,9 +38,10 @@ pub struct ArgError;
 
 #[derive(Debug, Fail)]
 pub enum TestError {
-    #[fail(display = "Change action from View to Run.")] ViewBoth,
-    #[fail(display = "created new test case, change action from Create to \
-                      Run.")]
+    #[fail(display = "Temporary action, remember to change back to Test.")]
+    ViewBoth,
+    #[fail(display = "Created new test case, remember to change action back \
+                      to Test.")]
     Create,
 }
 
