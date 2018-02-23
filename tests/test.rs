@@ -634,16 +634,42 @@ fn fancy_translation() {
 #[test]
 fn dot_fancy_translation() {
     check_model("dot_fancy_translation", Action::Test, || {
+        let align = C3::P000;
         let a = Dot::new(
             Shape::Cube,
             DotSpec {
                 pos: P3::new(0., 0., 0.),
-                align: C3::P000.into(),
+                align: align.into(),
                 size: 1.0,
                 rot: rotation_between(&Axis::X.into(), &V3::new(1., 1., 0.))?,
             },
         );
-        let b = a.translate_along_until(V3::new(9., 12., 15.), Axis::X, -3.);
+        let b =
+            a.translate_along_until(V3::new(9., 12., 15.), Axis::X, -3., align);
         Ok(union![a, b])
+    })
+}
+
+#[test]
+fn dot_fancy_translation2() {
+    check_model("dot_fancy_translation2", Action::Test, || {
+        let a = Dot::new(
+            Shape::Cube,
+            DotSpec {
+                pos: P3::new(0., 0., 0.),
+                align: DotAlign::center_solid(),
+                size: 1.0,
+                rot: rotation_between(&Axis::X.into(), &V3::new(1., 1., 0.))?,
+            },
+        );
+        let b = a.translate_along_until(
+            V3::new(5., 0., 0.),
+            Axis::X,
+            -2.,
+            C3::P100,
+        );
+        let c =
+            a.translate_along_until(V3::new(5., 0., 0.), Axis::X, 2., C3::P000);
+        Ok(union![a, b, c])
     })
 }

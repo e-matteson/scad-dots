@@ -216,23 +216,32 @@ impl Dot {
         Dot::new(self.shape, spec)
     }
 
-    pub fn translate_along_until(
+    /// Translate the dot along the given direction vector, until the part of
+    /// the dot specified by `align` has the given coordinate value.
+    pub fn translate_along_until<T>(
         &self,
         direction: V3,
         axis: Axis,
         axis_value: f32,
-    ) -> Dot {
-        Dot {
-            p000: translate_p3_along_until(
-                self.p000,
+        align: T,
+    ) -> Dot
+    where
+        T: Clone,
+        DotAlign: From<T>,
+    {
+        let start_pos = self.pos(align.clone());
+        let spec = DotSpec {
+            pos: translate_p3_along_until(
+                start_pos,
                 direction,
                 axis,
                 axis_value,
             ),
-            shape: self.shape,
+            align: align.into(),
             size: self.size,
             rot: self.rot,
-        }
+        };
+        Dot::new(self.shape, spec)
     }
 
     pub fn with_coord(&self, coordinate: f32, dimension: Axis) -> Dot {
