@@ -162,8 +162,13 @@ impl Dot {
         rotate(&self.rot, &axis.into())
     }
 
-    pub fn drop_cylinder(&self, bottom_z: f32) -> Dot {
-        // Get the position of the center of the lower dot
+    /// Create a dot centered under the given dot, with its bottom surface at
+    /// the given Z height. It will sit flat on the z-plane at the default
+    /// rotation, regardless of the rotation of the original dot. It will have
+    /// the same size as the original dot. If shape is None, it will have the
+    /// same shape as the original.
+    pub fn drop(&self, bottom_z: f32, shape: Option<Shape>) -> Dot {
+        // Get the position of the center of the dot
         let pos = self.pos(DotAlign::center_solid());
         // Drop its z coordinate.
         let pos = copy_p3_to(pos, bottom_z, Axis::Z);
@@ -171,7 +176,7 @@ impl Dot {
         // Create a Dot whose bottom face is centered on that position.
         // Reset its rotation.
         Dot::new(
-            Shape::Cylinder,
+            shape.unwrap_or(self.shape),
             DotSpec {
                 pos: pos,
                 align: DotAlign::center_face(CubeFace::Z0),
@@ -265,7 +270,6 @@ impl Dot {
     }
 }
 
-
 impl MapDots for Dot {
     fn map(&self, f: &Fn(&Dot) -> Dot) -> Dot {
         f(self)
@@ -332,7 +336,6 @@ impl From<C3> for DotAlign {
         DotAlign::Corner(corner3)
     }
 }
-
 
 impl Snake {
     pub fn new(start: Dot, end: Dot, order: [Axis; 3]) -> Result<Snake, Error> {
@@ -436,7 +439,6 @@ impl Cylinder {
     }
 }
 
-
 // /// Store links between each subsequent pair of things
 pub fn chain<T>(things: &[T]) -> Result<Tree, Error>
 where
@@ -458,7 +460,7 @@ where
     chain(&circular)
 }
 
-pub fn chain_helper<T>(v: &[T]) -> Result<Vec<(T, T)>, Error>
+fn chain_helper<T>(v: &[T]) -> Result<Vec<(T, T)>, Error>
 where
     T: Clone,
 {
@@ -505,7 +507,6 @@ fn unwrap_rot_axis(rot: &R3) -> Result<V3, Error> {
         }
     }
 }
-
 
 impl ColorSpec {
     pub fn name(&self) -> String {
@@ -564,7 +565,6 @@ where
         v
     }
 }
-
 
 impl<T> MinMaxCoord for Vec<T>
 where
@@ -625,4 +625,14 @@ pub fn extrude_z(height: f32, polygon: &[Dot]) -> Tree {
         .map(|dot| discard_z(dot.pos(DotAlign::center_solid())))
         .collect();
     Tree::Extrusion(height, centers)
+}
+
+pub fn drop_solid(dots: &[Dot], bottom_z: f32, shape: Option<Shape>) -> Tree {
+    let dropped_dots = dots.iter().map(|d| d.drop(bottom_z, shape));
+    let all_dots: Vec<_> = dots.into_iter()
+        .cloned()
+        .chain(dropped_dots)
+        .map(|d| d.into())
+        .collect();
+    Tree::Hull(all_dots)
 }
