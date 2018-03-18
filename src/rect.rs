@@ -57,7 +57,7 @@ pub enum RectLink {
     Frame,
     Dots,
     YPosts,
-    CutCorners,
+    Chamfer,
 }
 
 // When you create a new way of specifying dimensions, you must EITHER:
@@ -193,13 +193,13 @@ impl Rect {
                 hull![self.get_dot(C2::P00), self.get_dot(C2::P01)],
                 hull![self.get_dot(C2::P10), self.get_dot(C2::P11)],
             ],
-            RectLink::CutCorners => self.cut_corners()
-                .context("failed to link Rect in CutCorners style")?,
+            RectLink::Chamfer => self.chamfer()
+                .context("failed to link Rect in Chamfer style")?,
         })
     }
 
-    fn cut_corners(&self) -> Result<Tree, Error> {
-        // This is probably a reasonable default size, but we might want to take it as an arg in RectLink::CutCorners
+    fn chamfer(&self) -> Result<Tree, Error> {
+        // This is probably a reasonable default size, but we might want to take it as an arg in RectLink::Chamfer
         let new_dot_size = self.p00.size / 100.;
         let new_dot_shape = Shape::Cube;
 

@@ -34,7 +34,7 @@ fn rect_cut_corners() {
                 rot: axis_degrees(Axis::X.into(), 45.),
             },
         )?;
-        r.link(RectLink::CutCorners)
+        r.link(RectLink::Chamfer)
     })
 }
 
