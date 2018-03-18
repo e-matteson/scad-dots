@@ -5,7 +5,6 @@ use core::{Cylinder, Dot, Shape, Tree};
 
 use failure::Error;
 
-
 pub trait Render {
     fn render(&self, options: RenderQuality) -> Result<ScadObject, Error>;
 }
@@ -79,11 +78,11 @@ impl Tree {
 
     pub fn get_children(&self) -> Vec<Tree> {
         match *self {
-            Tree::Union(ref v) |
-            Tree::Hull(ref v) |
-            Tree::Diff(ref v) |
-            Tree::Color(_, ref v) |
-            Tree::Intersect(ref v) => v.clone(),
+            Tree::Union(ref v)
+            | Tree::Hull(ref v)
+            | Tree::Diff(ref v)
+            | Tree::Color(_, ref v)
+            | Tree::Intersect(ref v) => v.clone(),
             _ => Tree::panic_not_operator(),
         }
     }
@@ -112,13 +111,12 @@ impl Render for Tree {
     }
 }
 
-
 impl Render for Cylinder {
     fn render(&self, _options: RenderQuality) -> Result<ScadObject, Error> {
         let obj = scad!(
                 Translate(self.center_bot_pos_vec());{
                     scad!(
-                        Rotate(self.rot_degs(), self.rot_axis()?);{
+                        Rotate(self.rot_degs_for_rendering(), self.rot_axis_for_rendering()?);{
                             // Make cylinder, with bottom face centered on the origin
                             scad!(
                                 Cylinder(self.height, Diameter(self.diameter))

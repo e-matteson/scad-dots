@@ -64,6 +64,7 @@ pub enum CuboidLink {
     Sides,
     Face(CubeFace),
     OpenBot,
+    ZPost(C2),
 }
 
 pub trait CuboidSpec: Copy + Sized {
@@ -320,7 +321,7 @@ impl Cuboid {
         }
     }
 
-    pub fn get_post(&self, corner: C2) -> Post {
+    pub fn get_z_post(&self, corner: C2) -> Post {
         // TODO rename to get_vertical_post or something, really unclear
         Post {
             top: self.top.get_dot(corner),
@@ -377,10 +378,10 @@ impl Cuboid {
             CuboidLink::Frame => union![
                 self.bot.link(RectLink::Frame)?,
                 self.top.link(RectLink::Frame)?,
-                self.get_post(C2::P00).link(PostLink::Solid),
-                self.get_post(C2::P10).link(PostLink::Solid),
-                self.get_post(C2::P11).link(PostLink::Solid),
-                self.get_post(C2::P01).link(PostLink::Solid),
+                self.get_z_post(C2::P00).link(PostLink::Solid),
+                self.get_z_post(C2::P10).link(PostLink::Solid),
+                self.get_z_post(C2::P11).link(PostLink::Solid),
+                self.get_z_post(C2::P01).link(PostLink::Solid),
             ],
             CuboidLink::Dots => union![
                 self.top.link(RectLink::Dots)?,
@@ -388,6 +389,9 @@ impl Cuboid {
             ],
             CuboidLink::Face(face) => {
                 self.get_rect(face).link(RectLink::Solid)?
+            }
+            CuboidLink::ZPost(corner) => {
+                self.get_z_post(corner).link(PostLink::Solid)
             }
             CuboidLink::Sides => union![
                 self.link(CuboidLink::Face(CubeFace::X0))?,

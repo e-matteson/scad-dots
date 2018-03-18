@@ -1,8 +1,10 @@
 use utils::{midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3};
 use core::{chain, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
            Tree};
+use cuboid::{Cuboid, CuboidLink};
+
 use errors::MidpointError;
-use failure::Error;
+use failure::{Error, ResultExt};
 
 #[derive(Debug, Clone, Copy, MinMaxCoord, MapDots)]
 pub struct Rect {
@@ -55,6 +57,7 @@ pub enum RectLink {
     Frame,
     Dots,
     YPosts,
+    CutCorners,
 }
 
 // When you create a new way of specifying dimensions, you must EITHER:
@@ -190,7 +193,34 @@ impl Rect {
                 hull![self.get_dot(C2::P00), self.get_dot(C2::P01)],
                 hull![self.get_dot(C2::P10), self.get_dot(C2::P11)],
             ],
+            RectLink::CutCorners => self.cut_corners()
+                .context("failed to link Rect in CutCorners style")?,
         })
+    }
+
+    fn cut_corners(&self) -> Result<Tree, Error> {
+        // This is probably a reasonable default size, but we might want to take it as an arg in RectLink::CutCorners
+        let new_dot_size = self.p00.size / 100.;
+        let new_dot_shape = Shape::Cube;
+
+        let p00 = Cuboid::from_dot(self.p00, new_dot_size, new_dot_shape)?;
+        let p01 = Cuboid::from_dot(self.p01, new_dot_size, new_dot_shape)?;
+        let p10 = Cuboid::from_dot(self.p10, new_dot_size, new_dot_shape)?;
+        let p11 = Cuboid::from_dot(self.p11, new_dot_size, new_dot_shape)?;
+        Ok(hull![
+            p00.link(CuboidLink::ZPost(C2::P11))?,
+            p00.link(CuboidLink::ZPost(C2::P10))?,
+            p00.link(CuboidLink::ZPost(C2::P01))?,
+            p10.link(CuboidLink::ZPost(C2::P01))?,
+            p10.link(CuboidLink::ZPost(C2::P00))?,
+            p10.link(CuboidLink::ZPost(C2::P11))?,
+            p01.link(CuboidLink::ZPost(C2::P10))?,
+            p01.link(CuboidLink::ZPost(C2::P00))?,
+            p01.link(CuboidLink::ZPost(C2::P11))?,
+            p11.link(CuboidLink::ZPost(C2::P00))?,
+            p11.link(CuboidLink::ZPost(C2::P10))?,
+            p11.link(CuboidLink::ZPost(C2::P01))?,
+        ])
     }
 
     fn dots(&self) -> Vec<Dot> {

@@ -21,6 +21,24 @@ use scad_dots::triangle::*;
 use std::f32::consts::PI;
 
 #[test]
+fn rect_cut_corners() {
+    check_model("rect_cut_corners", Action::Test, || {
+        let r = Rect::new(
+            RectShapes::Cube,
+            RectSpecBasic {
+                pos: P3::origin(),
+                align: RectAlign::origin(),
+                y_dim: 2.0,
+                x_dim: 4.0,
+                size: 1.0,
+                rot: axis_degrees(Axis::X.into(), 45.),
+            },
+        )?;
+        r.link(RectLink::CutCorners)
+    })
+}
+
+#[test]
 fn triangle_simple() {
     check_model("triangle_simple", Action::Test, || {
         let spec = TriangleSpec {
@@ -290,6 +308,7 @@ fn dot_cyl() {
         Ok(dot![n])
     })
 }
+
 // // TODO rewrite without SpecYAxis
 // #[test]
 // fn cuboid_center() {
