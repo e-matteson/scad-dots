@@ -1,5 +1,5 @@
 use utils::{midpoint, Axis, Corner1 as C1, Corner2 as C2, Corner3 as C3,
-            CubeFace, P3, R3, V3};
+            CubeFace, Fraction, P3, R3, V3};
 use core::{mark, Dot, MapDots, MinMaxCoord, Shape, Tree};
 use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec, RectSpecBasic};
 use post::{Post, PostLink};
@@ -21,6 +21,17 @@ pub struct CuboidSpecBasic {
     pub y_dim: f32,
     pub z_dim: f32,
     pub size: f32,
+    pub rot: R3,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct CuboidSpecChamferZHole {
+    pub pos: P3,
+    pub align: CuboidAlign,
+    pub x_dim: f32,
+    pub y_dim: f32,
+    pub z_dim: f32,
+    pub chamfer: Fraction,
     pub rot: R3,
 }
 
@@ -65,6 +76,7 @@ pub enum CuboidLink {
     Face(CubeFace),
     OpenBot,
     ZPost(C2),
+    ChamferZ,
 }
 
 pub trait CuboidSpec: Copy + Sized {
@@ -403,6 +415,10 @@ impl Cuboid {
                 self.link(CuboidLink::Sides)?,
                 self.link(CuboidLink::Face(CubeFace::Z1))?,
             ],
+            CuboidLink::ChamferZ => union![
+                self.bot.link(RectLink::Chamfer)?,
+                self.top.link(RectLink::Chamfer)?,
+            ],
         })
     }
 }
@@ -436,6 +452,26 @@ impl CuboidSpec for CuboidSpecBasic {
 
     fn into_convertable(self) -> Result<CuboidSpecBasic, Error> {
         Ok(self)
+    }
+}
+
+impl CuboidSpec for CuboidSpecChamferZHole {
+    type C = CuboidSpecBasic;
+
+    fn into_convertable(self) -> Result<CuboidSpecBasic, Error> {
+        // TODO the dot size might be larger than the z dimension!
+        // This is ok if you only ever use it as a hole punched through a wall with thickness z.
+        // But bad if you try to do fancier things!
+        // TODO write fancier chamfer feature that does this right!
+        Ok(CuboidSpecBasic {
+            pos: self.pos,
+            align: self.align,
+            x_dim: self.x_dim,
+            y_dim: self.y_dim,
+            z_dim: self.z_dim,
+            size: self.chamfer.unwrap() * self.x_dim.min(self.y_dim) / 2.,
+            rot: self.rot,
+        })
     }
 }
 

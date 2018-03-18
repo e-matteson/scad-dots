@@ -39,6 +39,24 @@ fn rect_cut_corners() {
 }
 
 #[test]
+fn cuboid_chamfer_hole() {
+    check_model("cuboid_chamfer_hole", Action::Test, || {
+        // note that the z dimension is too thick!
+        let hole_spec = CuboidSpecChamferZHole {
+            pos: P3::origin(),
+            align: CuboidAlign::center_face(CubeFace::Z0),
+            x_dim: 4.,
+            y_dim: 3.,
+            z_dim: 1.,
+            chamfer: Fraction::new(1.)?,
+            rot: R3::identity(),
+        };
+        let hole = Cuboid::new(CuboidShapes::Cube, hole_spec)?;
+        hole.link(CuboidLink::ChamferZ)
+    })
+}
+
+#[test]
 fn triangle_simple() {
     check_model("triangle_simple", Action::Test, || {
         let spec = TriangleSpec {
