@@ -37,7 +37,7 @@ pub enum Shape {
 }
 
 // Cylinders have only basic support, without all the nice features of Dots.
-// They should only be used for making discs that are shorter than they're
+// They should only be used for making discs that are shorter than their
 // diameter.
 #[derive(Debug, Clone, Copy)]
 pub struct Cylinder {
@@ -479,12 +479,24 @@ impl From<Cylinder> for Tree {
 }
 
 impl Cylinder {
-    pub fn rot_degs(&self) -> f32 {
+    pub fn rot_degs_for_rendering(&self) -> f32 {
         radians_to_degrees(self.rot.angle())
     }
 
-    pub fn rot_axis(&self) -> Result<V3, Error> {
+    /// TODO what is this exactly? It's not the actual vector along the axis
+    /// of the cylinder, apparently. It works for rendering, but it's
+    /// misleading for users.
+    pub fn rot_axis_for_rendering(&self) -> Result<V3, Error> {
         unwrap_rot_axis(&self.rot)
+    }
+
+    pub fn dim_unit_vec_axis(&self) -> V3 {
+        let z: V3 = Axis::Z.into();
+        self.rot * z
+    }
+
+    pub fn center_solid(&self) -> Result<P3, Error> {
+        Ok(self.center_bot_pos + self.height / 2. * self.dim_unit_vec_axis())
     }
 }
 

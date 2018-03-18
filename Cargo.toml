@@ -13,5 +13,6 @@ approx = "0.1.*"
 failure = "0.1.*"
 
 [dependencies.nom]
+# TODO upgrade to 4.0 when out of alpha
 version = "3.2.*"
 features = ["verbose-errors"]
