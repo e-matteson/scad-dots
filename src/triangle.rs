@@ -150,11 +150,14 @@ impl TriangleSpec {
             (TriCorner::B, TriCorner::A) => {
                 self.rot_z(self.deg(TriCorner::B), self.unit(Axis::X))
             }
-            (TriCorner::C, TriCorner::A) => self.rot_z(-1. * self.deg(TriCorner::C), -1. * self.unit(Axis::X)),
+            (TriCorner::C, TriCorner::A) => self.rot_z(
+                -1. * self.deg(TriCorner::C),
+                -1. * self.unit(Axis::X),
+            ),
             (TriCorner::B, TriCorner::C) => self.unit(Axis::X),
-            (TriCorner::A, TriCorner::B) |
-            (TriCorner::A, TriCorner::C) |
-            (TriCorner::C, TriCorner::B) => reverse(),
+            (TriCorner::A, TriCorner::B)
+            | (TriCorner::A, TriCorner::C)
+            | (TriCorner::C, TriCorner::B) => reverse(),
             _ => panic!("not a valid triangle side: identical vertices"),
         }
     }

@@ -6,7 +6,6 @@ use core::{chain, chain_loop, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
 use errors::{DimensionError, MidpointError};
 use failure::{Error, Fail, ResultExt};
 
-
 #[derive(Debug, Clone, Copy, MapDots, MinMaxCoord, Default)]
 pub struct Post {
     pub top: Dot,
@@ -34,7 +33,10 @@ pub struct PostSpecAxis {
 
 #[derive(Debug, Copy, Clone)]
 pub enum PostAlign {
-    Corner { post: C1, dot: C3 },
+    Corner {
+        post: C1,
+        dot: C3,
+    },
     Midpoint {
         post_a: C1,
         dot_a: C3,
@@ -143,13 +145,11 @@ impl Post {
 
     pub fn copy_raise_bot(&self, distance: f32) -> Result<Post, Error> {
         if distance > self.dim_len(Axis::Z) - self.top.size {
-            return Err(
-                DimensionError
-                    .context(
-                        "failed to copy_raise_bot, new post would be too short",
-                    )
-                    .into(),
-            );
+            return Err(DimensionError
+                .context(
+                    "failed to copy_raise_bot, new post would be too short",
+                )
+                .into());
         }
         let translation_vec = distance * self.dim_unit_vec(Axis::Z);
         Ok(Post {
@@ -277,9 +277,8 @@ impl PostSpec for PostSpecAxis {
     }
 }
 
-
-
 impl PostAlign {
+    // TODO add center_solid, center_face
     pub fn origin() -> PostAlign {
         PostAlign::outside(C3::P000)
     }
@@ -295,7 +294,6 @@ impl PostAlign {
         PostAlign::midpoint(PostAlign::outside(a), PostAlign::outside(b))
             .expect("bug in outside_midpoint()")
     }
-
 
     pub fn midpoint(a: PostAlign, b: PostAlign) -> Result<PostAlign, Error> {
         match (a, b) {
@@ -317,7 +315,6 @@ impl PostAlign {
             _ => return Err(MidpointError.into()),
         }
     }
-
 
     pub fn offset(&self, dot_size: f32, post_length: f32, rot: &R3) -> V3 {
         let helper = |post: C1, dot: C3| {
@@ -362,7 +359,6 @@ impl PostShapes {
     }
 }
 
-
 impl PostSnake {
     pub fn bottoms(&self) -> [Dot; 4] {
         [
@@ -405,8 +401,6 @@ impl PostSnake {
     }
 }
 
-
-
 // #[derive(Debug, Clone, Copy)]
 // pub struct PostSpecEnds {
 //     pub bot: P3,
@@ -417,7 +411,6 @@ impl PostSnake {
 //    /// origin from P10.
 //     pub x_axis_handle: P3,
 // }
-
 
 // pub fn point_to_line(point: P3, line_start: P3, line_vec: V3) -> V3 {
 //     let x = line_start - point;

@@ -116,15 +116,18 @@ impl Render for Cylinder {
         let obj = scad!(
                 Translate(self.center_bot_pos_vec());{
                     scad!(
-                        Rotate(self.rot_degs_for_rendering(), self.rot_axis_for_rendering()?);{
-                            // Make cylinder, with bottom face centered on the origin
+                        Rotate(
+                            self.rot_degs_for_rendering(),
+                            self.rot_axis_for_rendering()?
+                        );{
+                            // Make cylinder w/ bottom face centered on origin
                             scad!(
                                 Cylinder(self.height, Diameter(self.diameter))
                             )
                         }
                     )
                 }
-            );
+        );
         Ok(obj)
     }
 }
