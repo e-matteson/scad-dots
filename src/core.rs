@@ -495,8 +495,16 @@ impl Cylinder {
         self.rot * z
     }
 
-    pub fn center_solid(&self) -> Result<P3, Error> {
-        Ok(self.center_bot_pos + self.height / 2. * self.dim_unit_vec_axis())
+    pub fn dim_vec_axis(&self) -> V3 {
+        self.height * self.dim_unit_vec_axis()
+    }
+
+    pub fn center_solid(&self) -> P3 {
+        self.center_bot_pos + self.dim_vec_axis() / 2.
+    }
+
+    pub fn center_top(&self) -> P3 {
+        self.center_bot_pos + self.dim_vec_axis()
     }
 }
 
