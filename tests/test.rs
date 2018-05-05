@@ -4,7 +4,7 @@ extern crate failure;
 extern crate nalgebra;
 extern crate nom;
 
-#[macro_use(union, hull, dot)]
+#[macro_use(union, hull, dot, mirror)]
 extern crate scad_dots;
 
 use scad_dots::harness::{check_model, Action, MAX_RELATIVE};
@@ -19,6 +19,34 @@ use scad_dots::cuboid::*;
 use scad_dots::triangle::*;
 
 use std::f32::consts::PI;
+
+#[test]
+fn mirror() {
+    check_model("mirror", Action::Test, || {
+        let r = Rect::new(
+            RectShapes::Cube,
+            RectSpecBasic {
+                pos: P3::origin(),
+                align: RectAlign::origin(),
+                y_dim: 10.0,
+                x_dim: 5.0,
+                size: 1.0,
+                rot: axis_radians(V3::new(1.0, 0.0, -2.), PI / 2.0),
+            },
+        )?;
+        let original = chain(&[
+            r.get_dot(C2::P01),
+            r.get_dot(C2::P00),
+            r.get_dot(C2::P11),
+            r.get_dot(C2::P10),
+        ])?;
+        Ok(union![
+            original.clone(),
+            mirror!(r.dim_unit_vec(Axis::X), original.clone()),
+            Tree::Mirror(Axis::X.into(), vec![original]),
+        ])
+    })
+}
 
 #[test]
 fn rect_cut_corners() {

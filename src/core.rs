@@ -64,10 +64,11 @@ pub enum Tree {
     Cylinder(Cylinder),
     Union(Vec<Tree>),
     Hull(Vec<Tree>),
-    Diff(Vec<Tree>),
+    Diff(Vec<Tree>), // Subtracts all following elements from the first
     Intersect(Vec<Tree>),
     Color(ColorSpec, Vec<Tree>),
     Extrusion(f32, Vec<V2>),
+    Mirror(V3, Vec<Tree>), // Mirrors across plane with the given normal vec
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -454,6 +455,15 @@ macro_rules! diff {
 macro_rules! intersect {
     ( $( $tree:expr),* $(,)* ) => {
         Tree::Intersect(vec![
+            $($tree.into(),)*
+        ])
+    }
+}
+
+#[macro_export]
+macro_rules! mirror {
+    ($normal:expr, $( $tree:expr),* $(,)* ) => {
+        Tree::Mirror($normal.into(), vec![
             $($tree.into(),)*
         ])
     }

@@ -64,7 +64,6 @@ where
 
 impl Tree {
     // Some helpful methods for implementing render.
-
     pub fn get_operation(&self) -> ScadObject {
         match *self {
             Tree::Union(_) => scad!(Union),
@@ -72,7 +71,10 @@ impl Tree {
             Tree::Diff(_) => scad!(Difference),
             Tree::Intersect(_) => scad!(Intersection),
             Tree::Color(color, _) => scad!(Color(color.rgb())),
-            _ => Tree::panic_not_operator(),
+            Tree::Mirror(normal, _) => scad!(Mirror(normal)),
+            Tree::Dot(..) | Tree::Cylinder(..) | Tree::Extrusion(..) => {
+                Tree::panic_not_operator()
+            }
         }
     }
 
@@ -82,8 +84,11 @@ impl Tree {
             | Tree::Hull(ref v)
             | Tree::Diff(ref v)
             | Tree::Color(_, ref v)
+            | Tree::Mirror(_, ref v)
             | Tree::Intersect(ref v) => v.clone(),
-            _ => Tree::panic_not_operator(),
+            Tree::Dot(..) | Tree::Cylinder(..) | Tree::Extrusion(..) => {
+                Tree::panic_not_operator()
+            }
         }
     }
 

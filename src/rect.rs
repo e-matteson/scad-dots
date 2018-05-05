@@ -1,6 +1,6 @@
 use utils::{midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3};
-use core::{chain, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
-           Tree};
+use core::{chain_loop, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord,
+           Shape, Tree};
 use cuboid::{Cuboid, CuboidLink};
 
 use errors::MidpointError;
@@ -182,12 +182,11 @@ impl Rect {
         Ok(match style {
             RectLink::Dots => Tree::Union(self.dots_as_trees()),
             RectLink::Solid => Tree::Hull(self.dots_as_trees()),
-            RectLink::Frame => chain(&[
+            RectLink::Frame => chain_loop(&[
                 self.get_dot(C2::P00),
                 self.get_dot(C2::P01),
                 self.get_dot(C2::P11),
                 self.get_dot(C2::P10),
-                self.get_dot(C2::P00),
             ])?,
             RectLink::YPosts => union![
                 hull![self.get_dot(C2::P00), self.get_dot(C2::P01)],

@@ -43,6 +43,7 @@ enum ScadThing {
     Polygon(Vec<Double>, f32), // assume 'paths' is always 'undef'
     // Color(Quad, Vec<ScadThing>),
     Color(Triple, Vec<ScadThing>),
+    Mirror(Triple, Vec<ScadThing>),
     Cube(Triple),
     Cylinder(f32, f32),
     Sphere(f32),
@@ -115,6 +116,7 @@ impl ScadThing {
             | ScadThing::Union(..)
             | ScadThing::Hull(..)
             | ScadThing::Difference(..)
+            | ScadThing::Mirror(..)
             | ScadThing::Cube(..)
             | ScadThing::Sphere(..)
             | ScadThing::Cylinder(..)
@@ -124,9 +126,9 @@ impl ScadThing {
 
     fn floats(&self) -> Vec<f32> {
         match *self {
-            ScadThing::Translate(v, _) | ScadThing::Cube(v) => {
-                vec![v.0, v.1, v.2]
-            }
+            ScadThing::Translate(v, _)
+            | ScadThing::Cube(v)
+            | ScadThing::Mirror(v, _) => vec![v.0, v.1, v.2],
             ScadThing::Rotate(f, v, _) => vec![f, v.0, v.1, v.2],
             ScadThing::Color(rgb, _) => vec![rgb.0, rgb.1, rgb.2],
             ScadThing::Cylinder(f1, f2) => vec![f1, f2],
@@ -154,6 +156,7 @@ impl ScadThing {
             ScadThing::Translate(_, ref children)
             | ScadThing::Rotate(_, _, ref children)
             | ScadThing::Color(_, ref children)
+            | ScadThing::Mirror(_, ref children)
             | ScadThing::Hull(ref children)
             | ScadThing::Difference(ref children)
             | ScadThing::LinearExtrude { ref children, .. }
@@ -232,7 +235,7 @@ named!(
     scad_thing<ScadThing>,
     ws!(alt!(
         cube | sphere | cylinder | union | difference | hull | translate
-            | rotate | color | polygon | linear_extrude
+            | rotate | color | polygon | linear_extrude | mirror
     ))
 );
 
@@ -267,6 +270,15 @@ named!(
         tag!("color") >> tag!("(") >> rgb: rgb >> tag!(")") >> tag!("{")
             >> children: many1!(scad_thing) >> tag!("}")
             >> (ScadThing::Color(rgb, children))
+    ))
+);
+
+named!(
+    mirror<ScadThing>,
+    ws!(do_parse!(
+        tag!("mirror") >> tag!("(") >> vector: triple >> tag!(")") >> tag!("{")
+            >> children: many1!(scad_thing) >> tag!("}")
+            >> (ScadThing::Mirror(vector, children))
     ))
 );
 
