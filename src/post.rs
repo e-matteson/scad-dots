@@ -143,6 +143,10 @@ impl Post {
         self.dim_vec(axis).norm()
     }
 
+    pub fn size(&self) -> f32 {
+        self.top.size
+    }
+
     pub fn copy_raise_bot(&self, distance: f32) -> Result<Post, Error> {
         if distance > self.dim_len(Axis::Z) - self.top.size {
             return Err(DimensionError
