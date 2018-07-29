@@ -426,6 +426,16 @@ impl Fraction {
     pub fn complement(&self) -> f32 {
         1. - self.unwrap()
     }
+
+    pub fn weighted_average(&self, a: f32, b: f32) -> f32 {
+        a * self.unwrap() + b * self.complement()
+    }
+
+    pub fn weighted_midpoint(&self, a: P3, b: P3) -> P3 {
+        // TODO there must be a better way to convert P3 to V3, right?
+        let vec_b = b - P3::origin();
+        a * self.unwrap() + vec_b * self.complement()
+    }
 }
 
 /// Apply a rotation to a vector. Why doesn't nalgebra give a method for this?
@@ -467,17 +477,9 @@ pub fn rotation_between(a: &V3, b: &V3) -> Result<R3, Error> {
 }
 
 pub fn midpoint(a: P3, b: P3) -> P3 {
-    weighted_midpoint(Fraction::new(0.5).expect("bad fraction"), a, b)
-}
-
-pub fn weighted_midpoint(weight_a: Fraction, a: P3, b: P3) -> P3 {
-    // TODO there must be a better way to convert P3 to V3, right?
-    let vec_b = b - P3::origin();
-    a * weight_a.unwrap() + vec_b * weight_a.complement()
-}
-
-pub fn weighted_average(weight_a: Fraction, a: f32, b: f32) -> f32 {
-    a * weight_a.unwrap() + b * weight_a.complement()
+    Fraction::new(0.5)
+        .expect("bad fraction")
+        .weighted_midpoint(a, b)
 }
 
 pub fn copy_p3_to(pos: P3, coord: f32, axis: Axis) -> P3 {
