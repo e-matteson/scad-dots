@@ -338,8 +338,8 @@ impl Into<V3> for Corner3 {
 }
 
 impl From<Corner2> for Corner3 {
+    /// Convert up to 3 dimensions, setting Z to zero.
     fn from(corner2: Corner2) -> Self {
-        /// Convert up to 3 dimensions, setting Z to zero.
         match corner2 {
             Corner2::P00 => Corner3::P000,
             Corner2::P01 => Corner3::P010,
@@ -350,8 +350,8 @@ impl From<Corner2> for Corner3 {
 }
 
 impl From<Corner3> for Corner2 {
+    /// Convert down to 2 dimensions, discarding the Z component
     fn from(corner3: Corner3) -> Self {
-        /// Convert down to 2 dimensions, discarding the Z component
         match corner3 {
             Corner3::P000 | Corner3::P001 => Corner2::P00,
             Corner3::P010 | Corner3::P011 => Corner2::P01,

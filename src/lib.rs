@@ -1,9 +1,3 @@
-#![feature(conservative_impl_trait)]
-#![feature(inclusive_range_syntax)]
-#![feature(slice_rotate)]
-#![allow(unused_doc_comment)] // what does this warning even mean?
-#![allow(unused_parens)] // these are originating from nom macros
-
 extern crate nalgebra;
 
 #[macro_use]
@@ -29,11 +23,11 @@ pub use self::parse::scad_relative_eq;
 #[macro_use]
 pub mod core;
 
-pub mod utils;
+pub mod cuboid;
 pub mod post;
 pub mod rect;
-pub mod cuboid;
 pub mod triangle;
+pub mod utils;
 
 pub mod errors;
 pub mod render;

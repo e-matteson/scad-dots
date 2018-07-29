@@ -168,8 +168,8 @@ impl CuboidAlign {
         }
     }
 
+    /// Return a list of all possible alignment values
     pub fn all_corners() -> Vec<CuboidAlign> {
-        /// Return a list of all possible alignment values
         let mut v = Vec::new();
         for d in C3::all() {
             for c in C3::all() {
