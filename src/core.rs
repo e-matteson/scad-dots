@@ -476,9 +476,51 @@ macro_rules! dot {
     }
 }
 
+impl Tree {
+    pub fn union<'a, T>(tree_like: &'a [T]) -> Tree
+    where
+        Tree: From<&'a T>,
+    {
+        Tree::Union(tree_like.iter().map(|x| x.into()).collect())
+    }
+
+    pub fn hull<'a, T>(tree_like: &'a [T]) -> Tree
+    where
+        Tree: From<&'a T>,
+    {
+        Tree::Hull(tree_like.iter().map(|x| x.into()).collect())
+    }
+
+    pub fn diff<'a, T>(tree_like: &'a [T]) -> Tree
+    where
+        Tree: From<&'a T>,
+    {
+        Tree::Diff(tree_like.iter().map(|x| x.into()).collect())
+    }
+
+    pub fn intersect<'a, T>(tree_like: &'a [T]) -> Tree
+    where
+        Tree: From<&'a T>,
+    {
+        Tree::Intersect(tree_like.iter().map(|x| x.into()).collect())
+    }
+}
+
 impl From<Dot> for Tree {
     fn from(dot: Dot) -> Tree {
         dot![dot]
+    }
+}
+
+impl<'a> From<&'a Dot> for Tree {
+    fn from(dot: &'a Dot) -> Tree {
+        dot.to_owned().into()
+    }
+}
+
+impl<'a> From<&'a Tree> for Tree {
+    fn from(tree: &'a Tree) -> Tree {
+        tree.to_owned()
     }
 }
 

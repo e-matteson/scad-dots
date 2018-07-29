@@ -179,9 +179,10 @@ impl Rect {
     }
 
     pub fn link(&self, style: RectLink) -> Result<Tree, Error> {
+        let dots = self.dots();
         Ok(match style {
-            RectLink::Dots => Tree::Union(self.dots_as_trees()),
-            RectLink::Solid => Tree::Hull(self.dots_as_trees()),
+            RectLink::Dots => Tree::union(&dots),
+            RectLink::Solid => Tree::hull(&dots),
             RectLink::Frame => chain_loop(&[
                 self.get_dot(C2::P00),
                 self.get_dot(C2::P01),
@@ -227,10 +228,6 @@ impl Rect {
             .into_iter()
             .map(|c| self.get_dot(c))
             .collect()
-    }
-
-    fn dots_as_trees(&self) -> Vec<Tree> {
-        self.dots().into_iter().map(|d| d.into()).collect()
     }
 }
 
