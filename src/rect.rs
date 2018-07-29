@@ -277,10 +277,10 @@ impl RectSpecToDot for RectSpecBasic {
         let dot_lengths = V3::new(self.size, self.size, self.size);
         let rect_lengths =
             V3::new(self.x_dim - self.size, self.y_dim - self.size, 0.);
-        let origin = self.pos
-            - self.align.offset(&dot_lengths, &rect_lengths, &self.rot);
+        let origin =
+            self.pos - self.align.offset(dot_lengths, rect_lengths, self.rot);
 
-        let pos = origin + corner.offset(&rect_lengths, &self.rot);
+        let pos = origin + corner.offset(rect_lengths, self.rot);
 
         Ok(DotSpec {
             pos: pos,
@@ -377,7 +377,7 @@ impl RectAlign {
         v
     }
 
-    pub fn offset(&self, dot_dim_vec: &V3, rect_dim_vec: &V3, rot: &R3) -> V3 {
+    pub fn offset(&self, dot_dim_vec: V3, rect_dim_vec: V3, rot: R3) -> V3 {
         let helper = |dot: C3, rect: C2| {
             dot.offset(dot_dim_vec, rot) + rect.offset(rect_dim_vec, rot)
         };

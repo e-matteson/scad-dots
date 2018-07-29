@@ -179,12 +179,7 @@ impl CuboidAlign {
         v
     }
 
-    pub fn offset(
-        &self,
-        cuboid_dim_vec: &V3,
-        dot_dim_vec: &V3,
-        rot: &R3,
-    ) -> V3 {
+    pub fn offset(&self, cuboid_dim_vec: V3, dot_dim_vec: V3, rot: R3) -> V3 {
         // TODO share code with RectAlign::offset()?
         let helper = |cuboid: C3, dot: C3| {
             dot.offset(dot_dim_vec, rot) + cuboid.offset(cuboid_dim_vec, rot)
@@ -433,9 +428,9 @@ impl CuboidSpecToRect for CuboidSpecBasic {
             self.y_dim - self.size,
             self.z_dim - self.size,
         );
-        let origin = self.pos
-            - self.align.offset(&cuboid_lengths, &dot_lengths, &self.rot);
-        let pos = origin + z_val.offset(cuboid_lengths.z, &self.rot);
+        let origin =
+            self.pos - self.align.offset(cuboid_lengths, dot_lengths, self.rot);
+        let pos = origin + z_val.offset(cuboid_lengths.z, self.rot);
         Ok(RectSpecBasic {
             pos: pos,
             align: RectAlign::origin(),

@@ -170,7 +170,7 @@ impl Dot {
             Shape::Sphere => V3::new(half, half, half),
             Shape::Cylinder => V3::new(half, half, 0.),
         };
-        rotate(&self.rot, &v)
+        rotate(self.rot, v)
     }
 
     pub fn render_shape(&self) -> ScadObject {

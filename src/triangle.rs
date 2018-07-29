@@ -128,11 +128,11 @@ impl TriangleSpec {
     }
 
     fn unit(&self, axis: Axis) -> V3 {
-        rotate(&self.rot, &axis.into())
+        rotate(self.rot, axis)
     }
 
     fn rot_z(&self, degrees: f32, vec: V3) -> V3 {
-        rotate(&axis_degrees(self.unit(Axis::Z), degrees), &vec)
+        rotate(axis_degrees(self.unit(Axis::Z), degrees), vec)
     }
 
     pub fn rot_from_x(

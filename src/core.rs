@@ -162,7 +162,7 @@ impl Dot {
     }
 
     pub fn dim_unit_vec(&self, axis: Axis) -> V3 {
-        rotate(&self.rot, &axis.into())
+        rotate(self.rot, axis)
     }
 
     /// Create a dot centered under the given dot, with its bottom surface at
@@ -287,7 +287,7 @@ impl Dot {
 
     /// Get the dot's axis of rotation.
     pub fn rot_axis(&self) -> Result<V3, Error> {
-        unwrap_rot_axis(&self.rot)
+        unwrap_rot_axis(self.rot)
     }
 
     /// Get the dot's angle of rotation in degrees.
@@ -299,7 +299,7 @@ impl Dot {
     where
         DotAlign: From<T>,
     {
-        self.p000 + DotAlign::from(align).offset(self.size, &self.rot)
+        self.p000 + DotAlign::from(align).offset(self.size, self.rot)
     }
 
     /// Get distance between the origins of the dots.
@@ -328,7 +328,7 @@ impl Dot {
         count: usize,
         adjust_dot_rotations: bool,
     ) -> Result<Vec<Dot>, Error> {
-        let axis = axis.unwrap_or(rotate(&self.rot, &Axis::Z.into()));
+        let axis = axis.unwrap_or(rotate(self.rot, Axis::Z));
 
         let mut dots = Vec::new();
         for i in 0..count {
@@ -391,7 +391,7 @@ impl Default for Dot {
 
 impl DotSpec {
     pub fn origin(&self) -> P3 {
-        self.pos - self.align.offset(self.size, &self.rot)
+        self.pos - self.align.offset(self.size, self.rot)
     }
 }
 
@@ -409,10 +409,10 @@ impl DotAlign {
         DotAlign::Midpoint(a, b)
     }
 
-    pub fn offset(&self, dot_size: f32, rot: &R3) -> V3 {
+    pub fn offset(&self, dot_size: f32, rot: R3) -> V3 {
         let dot_spec = dot_size * V3::new(1., 1., 1.);
 
-        let helper = |dot: C3| dot.offset(&dot_spec, rot);
+        let helper = |dot: C3| dot.offset(dot_spec, rot);
 
         match *self {
             DotAlign::Corner(a) => helper(a),
@@ -579,7 +579,7 @@ impl Cylinder {
     /// of the cylinder, apparently. It works for rendering, but it's
     /// misleading for users.
     pub fn rot_axis_for_rendering(&self) -> Result<V3, Error> {
-        unwrap_rot_axis(&self.rot)
+        unwrap_rot_axis(self.rot)
     }
 
     pub fn dim_unit_vec_axis(&self) -> V3 {
@@ -655,7 +655,7 @@ pub fn mark(pos: P3, size: f32) -> Tree {
     dot![s]
 }
 
-fn unwrap_rot_axis(rot: &R3) -> Result<V3, Error> {
+fn unwrap_rot_axis(rot: R3) -> Result<V3, Error> {
     match rot.axis() {
         Some(unit) => Ok(unit.unwrap()),
         None => {

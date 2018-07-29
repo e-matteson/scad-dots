@@ -142,9 +142,9 @@ impl RectEdge {
 }
 
 impl Corner1 {
-    pub fn offset(&self, z_length: f32, rot: &R3) -> V3 {
+    pub fn offset(&self, z_length: f32, rot: R3) -> V3 {
         let v: V3 = (*self).into();
-        rotate(rot, &(v * z_length))
+        rotate(rot, v * z_length)
     }
 
     pub fn is_high(&self) -> bool {
@@ -175,10 +175,10 @@ impl Into<V3> for Corner1 {
 }
 
 impl Corner2 {
-    pub fn offset(&self, dim_vec: &V3, rot: &R3) -> V3 {
+    pub fn offset(&self, dim_vec: V3, rot: R3) -> V3 {
         // TODO share code with Corner3.offset()?
         let v: V3 = self.into();
-        rotate(rot, &v.component_mul(dim_vec))
+        rotate(rot, v.component_mul(&dim_vec))
     }
 
     pub fn all_clockwise_from(corner: Corner2) -> Vec<Corner2> {
@@ -247,9 +247,9 @@ impl Into<V3> for Corner2 {
 impl Corner3 {
     // TODO come up with better approach than the bool tuples
 
-    pub fn offset(&self, dim_vec: &V3, rot: &R3) -> V3 {
+    pub fn offset(&self, dim_vec: V3, rot: R3) -> V3 {
         let v: V3 = self.to_owned().into();
-        rotate(rot, &v.component_mul(dim_vec))
+        rotate(rot, v.component_mul(&dim_vec))
     }
 
     pub fn is_high(&self, axis: Axis) -> bool {
@@ -445,7 +445,11 @@ impl Fraction {
 }
 
 /// Apply a rotation to a vector. Why doesn't nalgebra give a method for this?
-pub fn rotate(rot: &R3, v: &V3) -> V3 {
+pub fn rotate<T>(rot: R3, v: T) -> V3
+where
+    T: Into<V3>,
+{
+    let v = v.into();
     rot * v
 }
 

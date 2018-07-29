@@ -237,10 +237,9 @@ impl PostSpec for PostSpecRot {
 impl PostSpecToDot for PostSpecRot {
     fn to_dot_spec(&self, end: C1) -> Result<DotSpec, Error> {
         let origin = self.pos
-            - self.align
-                .offset(self.size, self.len - self.size, &self.rot);
+            - self.align.offset(self.size, self.len - self.size, self.rot);
 
-        let pos = origin + end.offset(self.len - self.size, &self.rot);
+        let pos = origin + end.offset(self.len - self.size, self.rot);
 
         Ok(DotSpec {
             pos: pos,
@@ -320,10 +319,10 @@ impl PostAlign {
         }
     }
 
-    pub fn offset(&self, dot_size: f32, post_length: f32, rot: &R3) -> V3 {
+    pub fn offset(&self, dot_size: f32, post_length: f32, rot: R3) -> V3 {
         let helper = |post: C1, dot: C3| {
             let dot_spec = dot_size * V3::new(1., 1., 1.);
-            dot.offset(&dot_spec, rot) + post.offset(post_length, rot)
+            dot.offset(dot_spec, rot) + post.offset(post_length, rot)
         };
 
         match *self {
