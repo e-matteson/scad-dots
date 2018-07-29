@@ -1,7 +1,9 @@
 use std::collections::HashSet;
+use std::f32::consts::PI;
 
-use utils::{map_float, radians_to_degrees, rotate, Axis, Corner3 as C3,
-            CubeFace, P2, P3, R3, V2, V3, V4, translate_p3_along_until};
+use utils::{axis_radians, map_float, radial_offset, radians_to_degrees,
+            rotate, Axis, Corner3 as C3, CubeFace, P2, P3, R3, V2, V3, V4,
+            translate_p3_along_until};
 use errors::{ChainError, RotationError, SnakeError};
 use failure::Error;
 
@@ -216,7 +218,7 @@ impl Dot {
             shape: self.shape,
             p000: rot * self.p000,
             size: self.size,
-            rot: rot * self.rot, // TODO order?
+            rot: rot * self.rot,
         }
     }
 
@@ -317,6 +319,44 @@ impl Dot {
         order: [Axis; 3],
     ) -> Result<[Dot; 4], Error> {
         Ok(Snake::new(*self, other, order)?.dots)
+    }
+
+    pub fn explode_radially(
+        &self,
+        radius: f32,
+        axis: Option<V3>,
+        count: usize,
+        adjust_dot_rotations: bool,
+    ) -> Result<Vec<Dot>, Error> {
+        let axis = axis.unwrap_or(rotate(&self.rot, &Axis::Z.into()));
+
+        let mut dots = Vec::new();
+        for i in 0..count {
+            let radians = (i as f32) / (count as f32) * 2. * PI;
+            // spec.pos += radial_offset(circle_fraction, radius, spec.rot);
+            let offset = radial_offset(radians, radius, axis)?;
+
+            let rot = if adjust_dot_rotations {
+                axis_radians(axis, radians) * self.rot
+            } else {
+                self.rot
+            };
+
+            let new = Dot::new(
+                self.shape,
+                DotSpec {
+                    pos: self.pos(DotAlign::center_solid()) + offset,
+                    align: DotAlign::center_solid(),
+                    size: self.size,
+                    rot: rot,
+                },
+            );
+
+            // self.translate(offset).rotate();
+            // spec.rot *= axis_radians(axis, circle_fraction * 2. * PI);
+            dots.push(new)
+        }
+        Ok(dots)
     }
 }
 

@@ -445,7 +445,7 @@ pub fn rotate(rot: &R3, v: &V3) -> V3 {
 
 pub fn degrees_between(vector_a: V3, vector_b: V3) -> Result<f32, Error> {
     Ok(radians_to_degrees(
-        rotation_between(&vector_a, &vector_b)?.angle(),
+        rotation_between(vector_a, vector_b)?.angle(),
     ))
 }
 
@@ -467,8 +467,9 @@ pub fn axis_degrees(axis: V3, degrees: f32) -> R3 {
     R3::from_axis_angle(&Unit::new_normalize(axis), degrees_to_radians(degrees))
 }
 
-pub fn rotation_between(a: &V3, b: &V3) -> Result<R3, Error> {
-    R3::rotation_between(a, b).ok_or_else(|| {
+pub fn rotation_between(a: V3, b: V3) -> Result<R3, Error> {
+    //  TODO generics for axis
+    R3::rotation_between(&a, &b).ok_or_else(|| {
         let err: Error = RotationError
             .context("failed to get rotation between vectors")
             .into();
@@ -547,4 +548,12 @@ pub fn relative_less_eq(a: f32, b: f32) -> bool {
 }
 pub fn relative_less(a: f32, b: f32) -> bool {
     a < b && !relative_eq!(a, b, max_relative = MAX_REL)
+}
+
+pub fn radial_offset(radians: f32, radius: f32, axis: V3) -> Result<V3, Error> {
+    let radius_vec = V3::new(radius, 0., 0.);
+    // let radians = circle_fraction * 2. * PI;
+    let rot_around_z = axis_radians(Axis::Z.into(), radians);
+    let z_to_real_axis = rotation_between(Axis::Z.into(), axis)?;
+    Ok(z_to_real_axis * rot_around_z * radius_vec)
 }

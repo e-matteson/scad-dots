@@ -140,7 +140,7 @@ impl TriangleSpec {
         c1: TriCorner,
         c2: TriCorner,
     ) -> Result<R3, Error> {
-        rotation_between(&self.unit(Axis::X), &self.unit_side(c1, c2))
+        rotation_between(self.unit(Axis::X), self.unit_side(c1, c2))
     }
 
     pub fn unit_side(&self, v1: TriCorner, v2: TriCorner) -> V3 {

@@ -260,7 +260,7 @@ impl PostSpecAxis {
         let mut rot = axis_radians(post_axis, self.radians);
 
         if post_axis != default_axis {
-            let rot_to_axis = rotation_between(&default_axis, &post_axis)
+            let rot_to_axis = rotation_between(default_axis, post_axis)
                 .context("failed to get post rotation")?;
             rot *= rot_to_axis;
         }

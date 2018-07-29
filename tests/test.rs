@@ -21,6 +21,53 @@ use scad_dots::triangle::*;
 use std::f32::consts::PI;
 
 #[test]
+fn explode_radially() {
+    check_model("explode_radially", Action::Test, || {
+        let x: V3 = Axis::X.into();
+        let y: V3 = Axis::Y.into();
+        let z: V3 = Axis::Z.into();
+        let rot = axis_degrees(y, 45.) * axis_degrees(x, 45.);
+        let dot = Dot::new(
+            Shape::Cylinder,
+            DotSpec {
+                pos: P3::new(20., 20., 20.),
+                align: DotAlign::center_solid(),
+                size: 20.0,
+                rot: rot,
+            },
+        );
+
+        Ok(union![
+            Tree::union(&dot.explode_radially(30., None, 5, true)?),
+            // Tree::union(&dot.explode_radially(30., Some(axis), 5, true)?),
+            dot,
+        ])
+    })
+}
+
+#[test]
+fn explode_radially2() {
+    check_model("explode_radially2", Action::Test, || {
+        let x: V3 = Axis::X.into();
+        let y: V3 = Axis::Y.into();
+        let dot = Dot::new(
+            Shape::Cube,
+            DotSpec {
+                pos: P3::new(20., 20., 20.),
+                align: DotAlign::center_solid(),
+                size: 20.0,
+                rot: axis_degrees(x, 45.),
+            },
+        );
+        let axis = y;
+        Ok(union![
+            Tree::union(&dot.explode_radially(30., Some(axis), 5, false)?),
+            dot,
+        ])
+    })
+}
+
+#[test]
 fn mirror() {
     check_model("mirror", Action::Test, || {
         let r = Rect::new(
@@ -706,7 +753,7 @@ fn dot_fancy_translation() {
                 pos: P3::new(0., 0., 0.),
                 align: align.into(),
                 size: 1.0,
-                rot: rotation_between(&Axis::X.into(), &V3::new(1., 1., 0.))?,
+                rot: rotation_between(Axis::X.into(), V3::new(1., 1., 0.))?,
             },
         );
         let b =
@@ -724,7 +771,7 @@ fn dot_fancy_translation2() {
                 pos: P3::new(0., 0., 0.),
                 align: DotAlign::center_solid(),
                 size: 1.0,
-                rot: rotation_between(&Axis::X.into(), &V3::new(1., 1., 0.))?,
+                rot: rotation_between(Axis::X.into(), V3::new(1., 1., 0.))?,
             },
         );
         let b = a.translate_along_until(
