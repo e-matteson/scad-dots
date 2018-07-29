@@ -25,7 +25,7 @@ fn explode_radially() {
     check_model("explode_radially", Action::Test, || {
         let x: V3 = Axis::X.into();
         let y: V3 = Axis::Y.into();
-        let z: V3 = Axis::Z.into();
+        // let z: V3 = Axis::Z.into();
         let rot = axis_degrees(y, 45.) * axis_degrees(x, 45.);
         let dot = Dot::new(
             Shape::Cylinder,
@@ -106,7 +106,7 @@ fn rect_cut_corners() {
                 y_dim: 2.0,
                 x_dim: 4.0,
                 size: 1.0,
-                rot: axis_degrees(Axis::X.into(), 45.),
+                rot: axis_degrees(Axis::X, 45.),
             },
         )?;
         r.link(RectLink::Chamfer)
@@ -140,7 +140,7 @@ fn triangle_simple() {
             deg_c: 30.,
             size: 3.,
             point_b: P3::new(0., -9., 0.),
-            rot: axis_degrees(Axis::Z.into(), 30.),
+            rot: axis_degrees(Axis::Z, 30.),
         };
         let tri = Triangle::new(spec)?;
         Ok(union![tri.mark(spec)?, tri.link()?])
@@ -163,10 +163,10 @@ fn map_cuboid() {
             },
         )?;
         let p2 = p1.map_translate(V3::new(0., -10., 0.));
-        let p3 = p1.map_rotate(axis_radians(Axis::Z.into(), -PI / 8.));
+        let p3 = p1.map_rotate(axis_radians(Axis::Z, -PI / 8.));
         let p4 = p1.map(&|d: &Dot| {
             d.translate(V3::new(20., 0., 0.))
-                .rotate(axis_radians(Axis::Z.into(), -PI / 8.))
+                .rotate(axis_radians(Axis::Z, -PI / 8.))
         });
         Ok(union![
             p1.link(CuboidLink::Solid)?,
@@ -187,8 +187,8 @@ fn map_post() {
                 align: PostAlign::outside(C3::P111),
                 len: 12.,
                 size: 2.,
-                rot: axis_radians(Axis::X.into(), PI / 8.)
-                    * axis_radians(Axis::Y.into(), PI / 2.),
+                rot: axis_radians(Axis::X, PI / 8.)
+                    * axis_radians(Axis::Y, PI / 2.),
             },
         )?;
         let p2 = p1.map_translate(V3::new(0., 0., 4.));
@@ -216,7 +216,7 @@ fn map_rect() {
                 x_dim: 10.,
                 y_dim: 5.,
                 size: 2.,
-                rot: axis_radians(Axis::X.into(), PI / 4.),
+                rot: axis_radians(Axis::X, PI / 4.),
             },
         )?;
         let r2 = r1.map_translate(V3::new(3., 0., 5.));
@@ -753,7 +753,7 @@ fn dot_fancy_translation() {
                 pos: P3::new(0., 0., 0.),
                 align: align.into(),
                 size: 1.0,
-                rot: rotation_between(Axis::X.into(), V3::new(1., 1., 0.))?,
+                rot: rotation_between(Axis::X, V3::new(1., 1., 0.))?,
             },
         );
         let b =
@@ -771,7 +771,7 @@ fn dot_fancy_translation2() {
                 pos: P3::new(0., 0., 0.),
                 align: DotAlign::center_solid(),
                 size: 1.0,
-                rot: rotation_between(Axis::X.into(), V3::new(1., 1., 0.))?,
+                rot: rotation_between(Axis::X, V3::new(1., 1., 0.))?,
             },
         );
         let b = a.translate_along_until(

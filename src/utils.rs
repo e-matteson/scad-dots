@@ -177,7 +177,7 @@ impl Into<V3> for Corner1 {
 impl Corner2 {
     pub fn offset(&self, dim_vec: &V3, rot: &R3) -> V3 {
         // TODO share code with Corner3.offset()?
-        let v: V3 = self.to_owned().into();
+        let v: V3 = self.into();
         rotate(rot, &v.component_mul(dim_vec))
     }
 
@@ -223,6 +223,12 @@ impl Corner2 {
             Corner2::P11 => (true, true),
             Corner2::P10 => (true, false),
         }
+    }
+}
+
+impl<'a> Into<V3> for &'a Corner2 {
+    fn into(self) -> V3 {
+        self.to_owned().into()
     }
 }
 
@@ -459,16 +465,31 @@ pub fn degrees_to_radians(deg: f32) -> f32 {
 }
 
 /// Create a rotation struct from an axis and an angle
-pub fn axis_radians(axis: V3, radians: f32) -> R3 {
-    R3::from_axis_angle(&Unit::new_normalize(axis), radians)
+pub fn axis_radians<T>(axis: T, radians: f32) -> R3
+where
+    T: Into<V3>,
+{
+    R3::from_axis_angle(&Unit::new_normalize(axis.into()), radians)
 }
 
-pub fn axis_degrees(axis: V3, degrees: f32) -> R3 {
-    R3::from_axis_angle(&Unit::new_normalize(axis), degrees_to_radians(degrees))
+pub fn axis_degrees<T>(axis: T, degrees: f32) -> R3
+where
+    T: Into<V3>,
+{
+    R3::from_axis_angle(
+        &Unit::new_normalize(axis.into()),
+        degrees_to_radians(degrees),
+    )
 }
 
-pub fn rotation_between(a: V3, b: V3) -> Result<R3, Error> {
+pub fn rotation_between<T, U>(a: T, b: U) -> Result<R3, Error>
+where
+    T: Into<V3>,
+    U: Into<V3>,
+{
     //  TODO generics for axis
+    let a: V3 = a.into();
+    let b: V3 = b.into();
     R3::rotation_between(&a, &b).ok_or_else(|| {
         let err: Error = RotationError
             .context("failed to get rotation between vectors")
@@ -553,7 +574,7 @@ pub fn relative_less(a: f32, b: f32) -> bool {
 pub fn radial_offset(radians: f32, radius: f32, axis: V3) -> Result<V3, Error> {
     let radius_vec = V3::new(radius, 0., 0.);
     // let radians = circle_fraction * 2. * PI;
-    let rot_around_z = axis_radians(Axis::Z.into(), radians);
-    let z_to_real_axis = rotation_between(Axis::Z.into(), axis)?;
+    let rot_around_z = axis_radians(Axis::Z, radians);
+    let z_to_real_axis = rotation_between(Axis::Z, axis)?;
     Ok(z_to_real_axis * rot_around_z * radius_vec)
 }
