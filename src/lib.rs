@@ -1,3 +1,4 @@
+extern crate libc;
 extern crate nalgebra;
 
 #[macro_use]

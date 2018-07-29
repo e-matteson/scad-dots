@@ -2,8 +2,11 @@ use failure::{Error, ResultExt};
 
 use std::process::Command;
 use std::fs::File;
-use std::io::{BufReader, Read, Write};
+use std::io::{self, BufReader, Read, Write};
 use std::path::PathBuf;
+use std::os::unix::process::CommandExt;
+
+use libc;
 
 use core::Tree;
 use render::{to_code, RenderQuality};
@@ -100,14 +103,24 @@ where
     Ok(())
 }
 
+/// This lets the child process (openscad) not get killed when the parent does.
+fn change_process_group() -> Result<(), io::Error> {
+    // First zero means affect current process, second zero means change pgid to own pid.
+    if 0 == unsafe { libc::setpgid(0, 0) } {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
+    }
+}
+
 fn view_in_openscad(paths: &[String]) -> Result<(), Error> {
-    let mut child = Command::new("openscad")
+    //  TODO only do before_exec for linux
+    // https://doc.rust-lang.org/reference/attributes.html#conditional-compilation
+    Command::new("openscad")
         .args(paths)
+        .before_exec(change_process_group)
         .spawn()
         .context("failed to run openscad viewer")?;
-    child.wait()
-        .map(|_| ()) // Don't care about Ok value
-        .context("failed to wait for openscad")?;
     Ok(())
 }
 
