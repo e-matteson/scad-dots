@@ -26,6 +26,7 @@ pub enum Action {
     Create,
     ViewBoth,
     Preview,
+    UpdatePreview,
     PrintMedium,
     PrintHigh,
 }
@@ -85,6 +86,12 @@ where
             let path = save_temp_file("actual", name, &actual)?;
             view_in_openscad(&[path])?;
             // Don't check if there's a matching expected model
+        }
+        Action::UpdatePreview => {
+            // Overwrite the Previewed file, but don't open a new instance of openscad.
+            // If there's an old instance it can reload it instead.
+            let actual = render_model(&tree, RenderQuality::Low)?;
+            save_temp_file("actual", name, &actual)?;
         }
         Action::Create => {
             let actual = render_model(&tree, RenderQuality::Low)?;
