@@ -1,7 +1,7 @@
 use scad_generator::*;
 
-use utils::{rotate, Corner3 as C3, P3, V2, V3};
 use core::{Cylinder, Dot, Shape, Tree};
+use utils::{rotate, Corner3 as C3, P3, V2, V3};
 
 use failure::Error;
 
@@ -177,19 +177,19 @@ impl Dot {
         match self.shape {
             Shape::Cube =>
             // Make cube, with bottom face centered on the origin
-                scad!(
-                    Cube(V3::new(self.size, self.size, self.size))
-                ),
+            {
+                scad!(Cube(V3::new(self.size, self.size, self.size)))
+            }
             Shape::Sphere =>
             // Make sphere, with bottom surface touching the origin
-                scad!(
-                    Sphere(Diameter(self.size))
-                ),
+            {
+                scad!(Sphere(Diameter(self.size)))
+            }
             Shape::Cylinder =>
             // Make cylinder, with bottom face centered on the origin
-                scad!(
-                    Cylinder(self.size, Diameter(self.size))
-                )
+            {
+                scad!(Cylinder(self.size, Diameter(self.size)))
+            }
         }
     }
 }

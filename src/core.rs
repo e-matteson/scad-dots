@@ -5,8 +5,8 @@ use errors::{ChainError, RotationError, SnakeError};
 use failure::Error;
 use utils::{
     axis_radians, map_float, radial_offset, radians_to_degrees, rotate,
-    translate_p3_along_until, Axis, Corner3 as C3, Corner1 as C1, CubeFace, P2, P3, R3, V2,
-    V3, V4,
+    translate_p3_along_until, Axis, Corner1 as C1, Corner3 as C3, CubeFace, P2,
+    P3, R3, V2, V3, V4,
 };
 
 /// The smallest building block of the 3d model.
@@ -62,7 +62,7 @@ pub struct CylinderSpec {
 
 #[derive(Debug, Clone, Copy)]
 pub enum CylinderAlign {
-    EndCenter( C1 ),
+    EndCenter(C1),
 }
 
 /// Draw a taxicab path between two dots
@@ -271,10 +271,7 @@ impl Dot {
         let start_pos = self.pos(align.clone());
         let spec = DotSpec {
             pos: translate_p3_along_until(
-                start_pos,
-                direction,
-                axis,
-                axis_value,
+                start_pos, direction, axis, axis_value,
             ),
             align: align.into(),
             size: self.size,
@@ -529,7 +526,7 @@ macro_rules! mirror {
 macro_rules! dot {
     ( $tree:expr ) => {
         Tree::Dot($tree.into())
-    }
+    };
 }
 
 impl Tree {
@@ -634,12 +631,12 @@ impl CylinderSpec {
 
 impl CylinderAlign {
     /// Return a vector from a cylinder's canonical alignment point (at the center of the bottom circle) to this alignment point.
-    fn offset(&self, diameter: f32, height: f32, rot: R3) -> V3 {
+    fn offset(&self, _diameter: f32, height: f32, rot: R3) -> V3 {
         match self {
             CylinderAlign::EndCenter(end) => match end {
                 C1::P0 => V3::zeros(),
                 C1::P1 => rot * V3::new(0., 0., height),
-            }
+            },
         }
     }
 }
@@ -737,25 +734,21 @@ impl ColorSpec {
 
 impl MinMaxCoord for P2 {
     fn all_coords(&self, axis: Axis) -> Vec<f32> {
-        vec![
-            match axis {
-                Axis::X => self.x,
-                Axis::Y => self.y,
-                Axis::Z => panic!("P2 has no z coordinate"),
-            },
-        ]
+        vec![match axis {
+            Axis::X => self.x,
+            Axis::Y => self.y,
+            Axis::Z => panic!("P2 has no z coordinate"),
+        }]
     }
 }
 
 impl MinMaxCoord for P3 {
     fn all_coords(&self, axis: Axis) -> Vec<f32> {
-        vec![
-            match axis {
-                Axis::X => self.x,
-                Axis::Y => self.y,
-                Axis::Z => self.z,
-            },
-        ]
+        vec![match axis {
+            Axis::X => self.x,
+            Axis::Y => self.y,
+            Axis::Z => self.z,
+        }]
     }
 }
 
@@ -834,7 +827,8 @@ pub fn extrude_z(height: f32, polygon: &[Dot]) -> Tree {
 
 pub fn drop_solid(dots: &[Dot], bottom_z: f32, shape: Option<Shape>) -> Tree {
     let dropped_dots = dots.iter().map(|d| d.drop(bottom_z, shape));
-    let all_dots: Vec<_> = dots.into_iter()
+    let all_dots: Vec<_> = dots
+        .into_iter()
         .cloned()
         .chain(dropped_dots)
         .map(|d| d.into())

@@ -1,10 +1,12 @@
-use utils::{midpoint, Axis, Corner1 as C1, Corner2 as C2, Corner3 as C3,
-            CubeFace, Fraction, P3, R3, V3};
 use core::{mark, Dot, MapDots, MinMaxCoord, Shape, Tree};
-use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec, RectSpecBasic};
-use post::{Post, PostLink};
 use errors::{ArgError, MidpointError};
 use failure::{Error, Fail};
+use post::{Post, PostLink};
+use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec, RectSpecBasic};
+use utils::{
+    midpoint, Axis, Corner1 as C1, Corner2 as C2, Corner3 as C3, CubeFace,
+    Fraction, P3, R3, V3,
+};
 
 #[derive(Debug, Clone, Copy, MapDots, MinMaxCoord)]
 /// A cuboid (box) is made of 2 rects, one above the other

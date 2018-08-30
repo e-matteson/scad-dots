@@ -1,7 +1,10 @@
-use utils::{axis_radians, midpoint, rotation_between, Axis, Corner1 as C1,
-            Corner3 as C3, P3, R3, V3};
-use core::{chain, chain_loop, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
-           Snake, Tree};
+use core::{
+    chain, chain_loop, Dot, DotSpec, MapDots, MinMaxCoord, Shape, Snake, Tree,
+};
+use utils::{
+    axis_radians, midpoint, rotation_between, Axis, Corner1 as C1,
+    Corner3 as C3, P3, R3, V3,
+};
 
 use errors::{DimensionError, MidpointError};
 use failure::{Error, Fail, ResultExt};
@@ -152,8 +155,7 @@ impl Post {
             return Err(DimensionError
                 .context(
                     "failed to copy_raise_bot, new post would be too short",
-                )
-                .into());
+                ).into());
         }
         let translation_vec = distance * self.dim_unit_vec(Axis::Z);
         Ok(Post {
@@ -236,8 +238,9 @@ impl PostSpec for PostSpecRot {
 
 impl PostSpecToDot for PostSpecRot {
     fn to_dot_spec(&self, end: C1) -> Result<DotSpec, Error> {
-        let origin = self.pos
-            - self.align.offset(self.size, self.len - self.size, self.rot);
+        let origin =
+            self.pos
+                - self.align.offset(self.size, self.len - self.size, self.rot);
 
         let pos = origin + end.offset(self.len - self.size, self.rot);
 
@@ -394,7 +397,8 @@ impl PostSnake {
             PostSnakeLink::Chain => Post::chain(&self.posts),
             PostSnakeLink::Posts => {
                 // Ok(union![self.posts[0], self.posts[1], self.posts[2], self.posts[2]])
-                let v: Vec<_> = self.posts
+                let v: Vec<_> = self
+                    .posts
                     .iter()
                     .map(|post| post.link(PostLink::Solid))
                     .collect();

@@ -1,16 +1,16 @@
 use failure::{Error, ResultExt};
 
-use std::process::Command;
 use std::fs::File;
 use std::io::{self, BufReader, Read, Write};
-use std::path::PathBuf;
 use std::os::unix::process::CommandExt;
+use std::path::PathBuf;
+use std::process::Command;
 
 use libc;
 
 use core::Tree;
-use render::{to_code, RenderQuality};
 use errors::{panic_error, TestError};
+use render::{to_code, RenderQuality};
 
 use parse::scad_relative_eq;
 

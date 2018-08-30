@@ -1,6 +1,7 @@
-use utils::{axis_degrees, rotate, rotation_between, sin_deg, Axis, CubeFace,
-            P3, R3, V3};
 use core::{mark, Dot, DotAlign, DotSpec, MapDots, MinMaxCoord, Shape, Tree};
+use utils::{
+    axis_degrees, rotate, rotation_between, sin_deg, Axis, CubeFace, P3, R3, V3,
+};
 
 use failure::Error;
 
@@ -150,10 +151,8 @@ impl TriangleSpec {
             (TriCorner::B, TriCorner::A) => {
                 self.rot_z(self.deg(TriCorner::B), self.unit(Axis::X))
             }
-            (TriCorner::C, TriCorner::A) => self.rot_z(
-                -1. * self.deg(TriCorner::C),
-                -1. * self.unit(Axis::X),
-            ),
+            (TriCorner::C, TriCorner::A) => self
+                .rot_z(-1. * self.deg(TriCorner::C), -1. * self.unit(Axis::X)),
             (TriCorner::B, TriCorner::C) => self.unit(Axis::X),
             (TriCorner::A, TriCorner::B)
             | (TriCorner::A, TriCorner::C)

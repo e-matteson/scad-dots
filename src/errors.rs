@@ -40,8 +40,10 @@ pub struct ArgError;
 pub enum TestError {
     #[fail(display = "Temporary action, remember to change back to Test.")]
     ViewBoth,
-    #[fail(display = "Created new test case, remember to change action back \
-                      to Test.")]
+    #[fail(
+        display = "Created new test case, remember to change action back to \
+                   Test."
+    )]
     Create,
 }
 

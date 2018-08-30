@@ -1,9 +1,9 @@
 use std;
 
 use approx::ApproxEq;
-use nom::{digit, float};
 use errors::ParseError;
 use failure::Error;
+use nom::{digit, float};
 
 pub fn scad_relative_eq(a: &str, b: &str, max_rel: f32) -> Result<bool, Error> {
     Ok(relative_eq!(
@@ -91,7 +91,8 @@ impl ScadThing {
             return false;
         }
 
-        for (c, d) in self.children()
+        for (c, d) in self
+            .children()
             .into_iter()
             .zip(other.children().into_iter())
         {
@@ -234,8 +235,17 @@ named!(
 named!(
     scad_thing<ScadThing>,
     ws!(alt!(
-        cube | sphere | cylinder | union | difference | hull | translate
-            | rotate | color | polygon | linear_extrude | mirror
+        cube | sphere
+            | cylinder
+            | union
+            | difference
+            | hull
+            | translate
+            | rotate
+            | color
+            | polygon
+            | linear_extrude
+            | mirror
     ))
 );
 
@@ -250,16 +260,23 @@ named!(
 named!(
     union<ScadThing>,
     ws!(do_parse!(
-        tag!("union") >> tag!("()") >> tag!("{") >> children: many1!(scad_thing)
-            >> tag!("}") >> (ScadThing::Union(children))
+        tag!("union")
+            >> tag!("()")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
+            >> (ScadThing::Union(children))
     ))
 );
 
 named!(
     difference<ScadThing>,
     ws!(do_parse!(
-        tag!("difference") >> tag!("()") >> tag!("{")
-            >> children: many1!(scad_thing) >> tag!("}")
+        tag!("difference")
+            >> tag!("()")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
             >> (ScadThing::Difference(children))
     ))
 );
@@ -267,8 +284,13 @@ named!(
 named!(
     color<ScadThing>,
     ws!(do_parse!(
-        tag!("color") >> tag!("(") >> rgb: rgb >> tag!(")") >> tag!("{")
-            >> children: many1!(scad_thing) >> tag!("}")
+        tag!("color")
+            >> tag!("(")
+            >> rgb: rgb
+            >> tag!(")")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
             >> (ScadThing::Color(rgb, children))
     ))
 );
@@ -276,8 +298,13 @@ named!(
 named!(
     mirror<ScadThing>,
     ws!(do_parse!(
-        tag!("mirror") >> tag!("(") >> vector: triple >> tag!(")") >> tag!("{")
-            >> children: many1!(scad_thing) >> tag!("}")
+        tag!("mirror")
+            >> tag!("(")
+            >> vector: triple
+            >> tag!(")")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
             >> (ScadThing::Mirror(vector, children))
     ))
 );
@@ -285,8 +312,13 @@ named!(
 named!(
     translate<ScadThing>,
     ws!(do_parse!(
-        tag!("translate") >> tag!("(") >> vector: triple >> tag!(")")
-            >> tag!("{") >> children: many1!(scad_thing) >> tag!("}")
+        tag!("translate")
+            >> tag!("(")
+            >> vector: triple
+            >> tag!(")")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
             >> (ScadThing::Translate(vector, children))
     ))
 );
@@ -294,11 +326,23 @@ named!(
 named!(
     polygon<ScadThing>,
     ws!(do_parse!(
-        tag!("polygon") >> tag!("(") >> tag!("points") >> tag!("=") >> tag!("[")
-            >> point_vec: many1!(double_trailing_comma) >> tag!("]")
-            >> tag!(",") >> tag!("paths") >> tag!("=") >> tag!("undef")
-            >> tag!(",") >> tag!("convexity") >> tag!("=")
-            >> convexity: number >> tag!(")") >> tag!(";")
+        tag!("polygon")
+            >> tag!("(")
+            >> tag!("points")
+            >> tag!("=")
+            >> tag!("[")
+            >> point_vec: many1!(double_trailing_comma)
+            >> tag!("]")
+            >> tag!(",")
+            >> tag!("paths")
+            >> tag!("=")
+            >> tag!("undef")
+            >> tag!(",")
+            >> tag!("convexity")
+            >> tag!("=")
+            >> convexity: number
+            >> tag!(")")
+            >> tag!(";")
             >> (ScadThing::Polygon(point_vec, convexity))
     ))
 );
@@ -306,14 +350,31 @@ named!(
 named!(
     linear_extrude<ScadThing>,
     ws!(do_parse!(
-        tag!("linear_extrude") >> tag!("(") >> tag!("height") >> tag!("=")
-            >> height: number >> tag!(",") >> tag!("center")
-            >> tag!("=") >> center: boolean >> tag!(",")
-            >> tag!("convecity") >> tag!("=") >> convecity: number
-            >> tag!(",") >> tag!("twist") >> tag!("=") >> twist: number
-            >> tag!(",") >> tag!("slices") >> tag!("=")
-            >> slices: number >> tag!(")") >> tag!("{")
-            >> children: many1!(scad_thing) >> tag!("}")
+        tag!("linear_extrude")
+            >> tag!("(")
+            >> tag!("height")
+            >> tag!("=")
+            >> height: number
+            >> tag!(",")
+            >> tag!("center")
+            >> tag!("=")
+            >> center: boolean
+            >> tag!(",")
+            >> tag!("convecity")
+            >> tag!("=")
+            >> convecity: number
+            >> tag!(",")
+            >> tag!("twist")
+            >> tag!("=")
+            >> twist: number
+            >> tag!(",")
+            >> tag!("slices")
+            >> tag!("=")
+            >> slices: number
+            >> tag!(")")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
             >> (ScadThing::LinearExtrude {
                 height: height,
                 center: center,
@@ -328,9 +389,15 @@ named!(
 named!(
     rotate<ScadThing>,
     ws!(do_parse!(
-        tag!("rotate") >> tag!("(") >> angle: number >> tag!(",")
-            >> axis: triple >> tag!(")") >> tag!("{")
-            >> children: many1!(scad_thing) >> tag!("}")
+        tag!("rotate")
+            >> tag!("(")
+            >> angle: number
+            >> tag!(",")
+            >> axis: triple
+            >> tag!(")")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
             >> (ScadThing::Rotate(angle, axis, children))
     ))
 );
@@ -338,15 +405,23 @@ named!(
 named!(
     hull<ScadThing>,
     ws!(do_parse!(
-        tag!("hull") >> tag!("()") >> tag!("{") >> children: many1!(scad_thing)
-            >> tag!("}") >> (ScadThing::Hull(children))
+        tag!("hull")
+            >> tag!("()")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
+            >> (ScadThing::Hull(children))
     ))
 );
 
 named!(
     cube<ScadThing>,
     ws!(do_parse!(
-        tag!("cube") >> tag!("(") >> dims: triple >> tag!(")") >> tag!(";")
+        tag!("cube")
+            >> tag!("(")
+            >> dims: triple
+            >> tag!(")")
+            >> tag!(";")
             >> (ScadThing::Cube(dims))
     ))
 );
@@ -354,17 +429,28 @@ named!(
 named!(
     sphere<ScadThing>,
     ws!(do_parse!(
-        tag!("sphere") >> tag!("(d=") >> diameter: number >> tag!(")")
-            >> tag!(";") >> (ScadThing::Sphere(diameter))
+        tag!("sphere")
+            >> tag!("(d=")
+            >> diameter: number
+            >> tag!(")")
+            >> tag!(";")
+            >> (ScadThing::Sphere(diameter))
     ))
 );
 
 named!(
     cylinder<ScadThing>,
     ws!(do_parse!(
-        tag!("cylinder") >> tag!("(") >> tag!("h=") >> height: number
-            >> tag!(",") >> tag!("d=") >> diameter: number >> tag!(")")
-            >> tag!(";") >> (ScadThing::Cylinder(height, diameter))
+        tag!("cylinder")
+            >> tag!("(")
+            >> tag!("h=")
+            >> height: number
+            >> tag!(",")
+            >> tag!("d=")
+            >> diameter: number
+            >> tag!(")")
+            >> tag!(";")
+            >> (ScadThing::Cylinder(height, diameter))
     ))
 );
 
@@ -400,8 +486,14 @@ named!(
 named!(
     triple<Triple>,
     ws!(do_parse!(
-        tag!("[") >> x: number >> tag!(",") >> y: number >> tag!(",")
-            >> z: number >> tag!("]") >> (x, y, z)
+        tag!("[")
+            >> x: number
+            >> tag!(",")
+            >> y: number
+            >> tag!(",")
+            >> z: number
+            >> tag!("]")
+            >> (x, y, z)
     ))
 );
 

@@ -10,20 +10,20 @@ extern crate scad_dots;
 use scad_dots::harness::{check_model, Action, MAX_RELATIVE};
 use scad_dots::parse::scad_relative_eq;
 
-use scad_dots::utils::{Corner1 as C1, Corner2 as C2, Corner3 as C3};
-use scad_dots::utils::*;
 use scad_dots::core::*;
+use scad_dots::cuboid::*;
 use scad_dots::post::*;
 use scad_dots::rect::*;
-use scad_dots::cuboid::*;
 use scad_dots::triangle::*;
+use scad_dots::utils::*;
+use scad_dots::utils::{Corner1 as C1, Corner2 as C2, Corner3 as C3};
 
 use std::f32::consts::PI;
 
 #[test]
 fn cylinder_spec() {
     check_model("cylinder_spec", Action::Test, || {
-        let spec = CylinderSpec{
+        let spec = CylinderSpec {
             pos: P3::origin(),
             align: CylinderAlign::EndCenter(C1::P0),
             diameter: 10.,
@@ -37,7 +37,7 @@ fn cylinder_spec() {
 #[test]
 fn cylinder_spec2() {
     check_model("cylinder_spec2", Action::Test, || {
-        let spec = CylinderSpec{
+        let spec = CylinderSpec {
             pos: P3::origin(),
             align: CylinderAlign::EndCenter(C1::P1),
             diameter: 10.,
@@ -51,7 +51,7 @@ fn cylinder_spec2() {
 #[test]
 fn cylinder_spec3() {
     check_model("cylinder_spec3", Action::Test, || {
-        let spec = CylinderSpec{
+        let spec = CylinderSpec {
             pos: P3::new(20., 0., 10.),
             align: CylinderAlign::EndCenter(C1::P1),
             diameter: 10.,
@@ -284,13 +284,14 @@ fn scad_equality() {
 				union()
 				{
                  cylinder(h=1,d=2);
-				\
-                 cylinder(h=3,d=4);
+				cylinder(h=3,d=4);
                  }
 ";
 
-    assert!(!scad_relative_eq(scad1, scad2, 0.00001)
-        .expect("failed to check equality"));
+    assert!(
+        !scad_relative_eq(scad1, scad2, 0.00001)
+            .expect("failed to check equality")
+    );
 }
 
 #[test]

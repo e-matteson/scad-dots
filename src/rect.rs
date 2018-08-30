@@ -1,7 +1,11 @@
-use utils::{midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3};
-use core::{chain_loop, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord,
-           Shape, Tree};
+use core::{
+    chain_loop, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
+    Tree,
+};
 use cuboid::{Cuboid, CuboidLink};
+use utils::{
+    midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3,
+};
 
 use errors::MidpointError;
 use failure::{Error, ResultExt};
@@ -193,7 +197,8 @@ impl Rect {
                 hull![self.get_dot(C2::P00), self.get_dot(C2::P01)],
                 hull![self.get_dot(C2::P10), self.get_dot(C2::P11)],
             ],
-            RectLink::Chamfer => self.chamfer()
+            RectLink::Chamfer => self
+                .chamfer()
                 .context("failed to link Rect in Chamfer style")?,
         })
     }

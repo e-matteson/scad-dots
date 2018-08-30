@@ -1,7 +1,9 @@
+pub use nalgebra::distance;
+use nalgebra::{
+    Point2, Point3, Unit, UnitQuaternion, Vector2, Vector3, Vector4,
+};
 use std::f32;
 use std::f32::consts::PI;
-use nalgebra::{Point2, Point3, Unit, UnitQuaternion, Vector2, Vector3, Vector4};
-pub use nalgebra::distance;
 
 pub use errors::{ArgError, RatioError, RotationError};
 use failure::{Error, Fail};
