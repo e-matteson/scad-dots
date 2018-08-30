@@ -1,11 +1,13 @@
 use std::collections::HashSet;
 use std::f32::consts::PI;
 
-use utils::{axis_radians, map_float, radial_offset, radians_to_degrees,
-            rotate, Axis, Corner3 as C3, CubeFace, P2, P3, R3, V2, V3, V4,
-            translate_p3_along_until};
 use errors::{ChainError, RotationError, SnakeError};
 use failure::Error;
+use utils::{
+    axis_radians, map_float, radial_offset, radians_to_degrees, rotate,
+    translate_p3_along_until, Axis, Corner3 as C3, Corner1 as C1, CubeFace, P2, P3, R3, V2,
+    V3, V4,
+};
 
 /// The smallest building block of the 3d model.
 #[derive(Debug, Clone, Copy)]
@@ -47,6 +49,20 @@ pub struct Cylinder {
     pub diameter: f32,
     pub height: f32,
     pub rot: R3,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct CylinderSpec {
+    pub pos: P3,
+    pub align: CylinderAlign,
+    pub diameter: f32,
+    pub height: f32,
+    pub rot: R3,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CylinderAlign {
+    EndCenter( C1 ),
 }
 
 /// Draw a taxicab path between two dots
@@ -571,6 +587,16 @@ impl From<Cylinder> for Tree {
 }
 
 impl Cylinder {
+    /// Create a new cylinder.
+    pub fn new(spec: CylinderSpec) -> Self {
+        Self {
+            center_bot_pos: spec.center_bot_pos(),
+            diameter: spec.diameter,
+            height: spec.height,
+            rot: spec.rot,
+        }
+    }
+
     pub fn rot_degs_for_rendering(&self) -> f32 {
         radians_to_degrees(self.rot.angle())
     }
@@ -597,6 +623,24 @@ impl Cylinder {
 
     pub fn center_top(&self) -> P3 {
         self.center_bot_pos + self.dim_vec_axis()
+    }
+}
+
+impl CylinderSpec {
+    fn center_bot_pos(&self) -> P3 {
+        self.pos - self.align.offset(self.diameter, self.height, self.rot)
+    }
+}
+
+impl CylinderAlign {
+    /// Return a vector from a cylinder's canonical alignment point (at the center of the bottom circle) to this alignment point.
+    fn offset(&self, diameter: f32, height: f32, rot: R3) -> V3 {
+        match self {
+            CylinderAlign::EndCenter(end) => match end {
+                C1::P0 => V3::zeros(),
+                C1::P1 => rot * V3::new(0., 0., height),
+            }
+        }
     }
 }
 

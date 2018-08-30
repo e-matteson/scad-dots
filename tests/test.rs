@@ -21,6 +21,48 @@ use scad_dots::triangle::*;
 use std::f32::consts::PI;
 
 #[test]
+fn cylinder_spec() {
+    check_model("cylinder_spec", Action::Test, || {
+        let spec = CylinderSpec{
+            pos: P3::origin(),
+            align: CylinderAlign::EndCenter(C1::P0),
+            diameter: 10.,
+            height: 3.,
+            rot: R3::identity(),
+        };
+        Ok(Cylinder::new(spec).into())
+    })
+}
+
+#[test]
+fn cylinder_spec2() {
+    check_model("cylinder_spec2", Action::Test, || {
+        let spec = CylinderSpec{
+            pos: P3::origin(),
+            align: CylinderAlign::EndCenter(C1::P1),
+            diameter: 10.,
+            height: 3.,
+            rot: R3::identity(),
+        };
+        Ok(Cylinder::new(spec).into())
+    })
+}
+
+#[test]
+fn cylinder_spec3() {
+    check_model("cylinder_spec3", Action::Test, || {
+        let spec = CylinderSpec{
+            pos: P3::new(20., 0., 10.),
+            align: CylinderAlign::EndCenter(C1::P1),
+            diameter: 10.,
+            height: 3.,
+            rot: axis_degrees(Axis::X, 15.),
+        };
+        Ok(Cylinder::new(spec).into())
+    })
+}
+
+#[test]
 fn explode_radially() {
     check_model("explode_radially", Action::Test, || {
         let x: V3 = Axis::X.into();
