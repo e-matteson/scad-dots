@@ -1,7 +1,7 @@
 use scad_generator::*;
 
-use core::{Cylinder, Dot, Shape, Tree};
-use utils::{rotate, Corner3 as C3, P3, V2, V3};
+use core::{Cylinder, Dot, Extrusion, Shape, Tree};
+use utils::{rotate, Corner3 as C3, P2, P3, V2, V3};
 
 use failure::Error;
 
@@ -102,9 +102,7 @@ impl Render for Tree {
         match *self {
             Tree::Dot(ref dot) => dot.render(options),
             Tree::Cylinder(ref cylinder) => cylinder.render(options),
-            Tree::Extrusion(height, ref points) => {
-                render_extrusion(height, points)
-            }
+            Tree::Extrusion(ref extrusion) => extrusion.render(options),
             _ => {
                 let mut operation = self.get_operation();
                 for child in self.get_children() {
@@ -194,21 +192,23 @@ impl Dot {
     }
 }
 
-pub fn render_extrusion(
-    height: f32,
-    points: &[V2],
-) -> Result<ScadObject, Error> {
-    let points: Vec<_> = points.to_vec();
-    let mut params = LinExtrudeParams::default();
-    params.height = height;
-    Ok(scad!(LinearExtrude(params);{
-        scad!( Polygon(PolygonParameters::new(points)))
-    }))
-    // let polygon = ScadObject::new(x
-    //     ScadElement::Polygon::new(),
-    // );
+impl Extrusion {
+    pub fn scad_translation(&self) -> V3 {
+        V3::new(0., 0., self.bottom_z)
+    }
+}
 
-    // let extrude = ScadObject::new(LinearExtrude(extrude_params));
-    // extrude.add_child(polygon);
-    // extrude
+impl Render for Extrusion {
+    fn render(&self, _options: RenderQuality) -> Result<ScadObject, Error> {
+        // TODO update, add translation
+        let points: Vec<V2> =
+            self.perimeter.iter().map(|p| p - P2::origin()).collect();
+        let mut params = LinExtrudeParams::default();
+        params.height = self.thickness;
+        Ok(scad!(
+            Translate(self.scad_translation());{
+                scad!(LinearExtrude(params);{
+                    scad!( Polygon(PolygonParameters::new(points)))
+                })}))
+    }
 }

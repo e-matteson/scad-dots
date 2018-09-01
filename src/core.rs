@@ -6,7 +6,7 @@ use failure::Error;
 use utils::{
     axis_radians, map_float, radial_offset, radians_to_degrees, rotate,
     translate_p3_along_until, Axis, Corner1 as C1, Corner3 as C3, CubeFace, P2,
-    P3, R3, V2, V3, V4,
+    P3, R3, V3, V4,
 };
 
 /// The smallest building block of the 3d model.
@@ -78,15 +78,29 @@ pub enum SnakeLink {
 
 #[derive(Debug, Clone)]
 pub enum Tree {
+    /// A primitive object representing a dot with equal side lengths.
     Dot(Dot),
+    /// A primitive object representing a cylinder with an arbitrary height and diameter.
     Cylinder(Cylinder),
+    /// A primitive object representing a 2d polygon that it is extruded into the 3rd dimension.
+    Extrusion(Extrusion),
+    /// An operator that takes the union of its children.
     Union(Vec<Tree>),
+    /// An operator that gets the smallest convex shape that encloses all the elements
     Hull(Vec<Tree>),
-    Diff(Vec<Tree>), // Subtracts all following elements from the first
+    /// Subtract all following elements from the first
+    Diff(Vec<Tree>),
     Intersect(Vec<Tree>),
     Color(ColorSpec, Vec<Tree>),
-    Extrusion(f32, Vec<V2>),
     Mirror(V3, Vec<Tree>), // Mirrors across plane with the given normal vec
+}
+
+/// Extrude the given perimeter into the z dimension. The bottom surface of the extrusion will be on the z=`bottom_z` plane, and have the given z `thickness`.
+#[derive(Debug, Clone)]
+pub struct Extrusion {
+    pub perimeter: Vec<P2>,
+    pub bottom_z: f32,
+    pub thickness: f32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -565,15 +579,12 @@ impl From<Dot> for Tree {
     }
 }
 
-impl<'a> From<&'a Dot> for Tree {
-    fn from(dot: &'a Dot) -> Tree {
-        dot.to_owned().into()
-    }
-}
-
-impl<'a> From<&'a Tree> for Tree {
-    fn from(tree: &'a Tree) -> Tree {
-        tree.to_owned()
+impl<'a, T> From<&'a T> for Tree
+where
+    T: Into<Tree> + Clone,
+{
+    fn from(tree_like: &'a T) -> Tree {
+        tree_like.to_owned().into()
     }
 }
 
@@ -620,6 +631,10 @@ impl Cylinder {
 
     pub fn center_top(&self) -> P3 {
         self.center_bot_pos + self.dim_vec_axis()
+    }
+
+    pub fn link(&self) -> Tree {
+        self.into()
     }
 }
 
@@ -816,13 +831,28 @@ where
     }
 }
 
-pub fn extrude_z(height: f32, polygon: &[Dot]) -> Tree {
-    let discard_z = |pos: P3| V2::new(pos.x, pos.y);
-    let centers: Vec<_> = polygon
-        .iter()
-        .map(|dot| discard_z(dot.pos(DotAlign::center_solid())))
-        .collect();
-    Tree::Extrusion(height, centers)
+impl Extrusion {
+    pub fn from_dot_centers(
+        perimeter: &[Dot],
+        thickness: f32,
+        bottom_z: f32,
+    ) -> Self {
+        let discard_z = |pos: P3| P2::new(pos.x, pos.y);
+        let centers: Vec<_> = perimeter
+            .iter()
+            .map(|dot| discard_z(dot.pos(DotAlign::center_solid())))
+            .collect();
+
+        Extrusion {
+            perimeter: centers,
+            bottom_z,
+            thickness,
+        }
+    }
+
+    pub fn link(&self) -> Tree {
+        Tree::Extrusion(self.clone())
+    }
 }
 
 pub fn drop_solid(dots: &[Dot], bottom_z: f32, shape: Option<Shape>) -> Tree {

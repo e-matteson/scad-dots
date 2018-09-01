@@ -19,6 +19,21 @@ use scad_dots::utils::*;
 use scad_dots::utils::{Corner1 as C1, Corner2 as C2, Corner3 as C3};
 
 use std::f32::consts::PI;
+#[test]
+fn extrude1() {
+    check_model("extrude1", Action::Test, || {
+        let extrusion = Extrusion {
+            perimeter: vec![
+                P2::new(-5., -5.),
+                P2::new(0., 10.),
+                P2::new(20., 10.),
+            ],
+            thickness: 1.,
+            bottom_z: -5.,
+        };
+        Ok(extrusion.link())
+    })
+}
 
 #[test]
 fn cylinder_spec() {
