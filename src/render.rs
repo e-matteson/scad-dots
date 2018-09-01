@@ -1,7 +1,7 @@
 use scad_generator::*;
 
+use core::utils::{rotate, Corner3 as C3, P2, P3, V2, V3};
 use core::{Cylinder, Dot, Extrusion, Shape, Tree, TreeObject, TreeOperator};
-use utils::{rotate, Corner3 as C3, P2, P3, V2, V3};
 
 use failure::Error;
 

@@ -71,6 +71,12 @@ pub enum CubeFace {
 #[derive(Debug, Clone, Copy)]
 pub struct Fraction(f32);
 
+#[derive(Debug, Clone, Copy)]
+pub enum ColorSpec {
+    Red,
+    Green,
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Axis {
@@ -583,4 +589,40 @@ pub fn radial_offset(radians: f32, radius: f32, axis: V3) -> Result<V3, Error> {
     let rot_around_z = axis_radians(Axis::Z, radians);
     let z_to_real_axis = rotation_between(Axis::Z, axis)?;
     Ok(z_to_real_axis * rot_around_z * radius_vec)
+}
+
+pub(crate) fn unwrap_rot_axis(rot: R3) -> Result<V3, Error> {
+    match rot.axis() {
+        Some(unit) => Ok(unit.unwrap()),
+        None => {
+            if rot.angle() != 0.0 {
+                // TODO approx equal
+                return Err(RotationError.into());
+            }
+            // Shouldn't matter what axis we use here, since the angle is 0
+            Ok(Axis::Z.into())
+        }
+    }
+}
+
+impl ColorSpec {
+    pub fn name(&self) -> String {
+        match *self {
+            ColorSpec::Red => "red",
+            ColorSpec::Green => "green",
+        }.to_owned()
+    }
+    pub fn rgb(&self) -> V3 {
+        match *self {
+            ColorSpec::Red => V3::new(1., 0., 0.),
+            ColorSpec::Green => V3::new(0., 1., 0.),
+        }.to_owned()
+    }
+    pub fn rgba(&self) -> V4 {
+        let alpha = 0.5;
+        match *self {
+            ColorSpec::Red => V4::new(1., 0., 0., alpha),
+            ColorSpec::Green => V4::new(0., 1., 0., alpha),
+        }.to_owned()
+    }
 }

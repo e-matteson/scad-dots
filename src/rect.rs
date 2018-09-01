@@ -1,11 +1,11 @@
+use core::utils::{
+    midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3,
+};
 use core::{
     chain_loop, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
     Tree,
 };
 use cuboid::{Cuboid, CuboidLink};
-use utils::{
-    midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3,
-};
 
 use errors::MidpointError;
 use failure::{Error, ResultExt};

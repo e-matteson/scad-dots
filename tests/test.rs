@@ -11,12 +11,11 @@ use scad_dots::harness::{check_model, Action, MAX_RELATIVE};
 use scad_dots::parse::scad_relative_eq;
 
 use scad_dots::core::*;
+use scad_dots::core::{Corner1 as C1, Corner2 as C2, Corner3 as C3};
 use scad_dots::cuboid::*;
 use scad_dots::post::*;
 use scad_dots::rect::*;
 use scad_dots::triangle::*;
-use scad_dots::utils::*;
-use scad_dots::utils::{Corner1 as C1, Corner2 as C2, Corner3 as C3};
 
 use std::f32::consts::PI;
 #[test]

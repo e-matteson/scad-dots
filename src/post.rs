@@ -1,9 +1,9 @@
-use core::{
-    chain, chain_loop, Dot, DotSpec, MapDots, MinMaxCoord, Shape, Snake, Tree,
-};
-use utils::{
+use core::utils::{
     axis_radians, midpoint, rotation_between, Axis, Corner1 as C1,
     Corner3 as C3, P3, R3, V3,
+};
+use core::{
+    chain, chain_loop, Dot, DotSpec, MapDots, MinMaxCoord, Shape, Snake, Tree,
 };
 
 use errors::{DimensionError, MidpointError};

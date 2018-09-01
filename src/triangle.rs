@@ -1,7 +1,7 @@
-use core::{mark, Dot, DotAlign, DotSpec, MapDots, MinMaxCoord, Shape, Tree};
-use utils::{
+use core::utils::{
     axis_degrees, rotate, rotation_between, sin_deg, Axis, CubeFace, P3, R3, V3,
 };
+use core::{mark, Dot, DotAlign, DotSpec, MapDots, MinMaxCoord, Shape, Tree};
 
 use failure::Error;
 
