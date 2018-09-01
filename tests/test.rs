@@ -4,7 +4,7 @@ extern crate failure;
 extern crate nalgebra;
 extern crate nom;
 
-#[macro_use(union, hull, dot, mirror)]
+#[macro_use(union, hull, mirror)]
 extern crate scad_dots;
 
 use scad_dots::harness::{check_model, Action, MAX_RELATIVE};
@@ -31,7 +31,7 @@ fn extrude1() {
             thickness: 1.,
             bottom_z: -5.,
         };
-        Ok(extrusion.link())
+        Ok(extrusion.into())
     })
 }
 
@@ -95,7 +95,7 @@ fn explode_radially() {
         );
 
         Ok(union![
-            Tree::union(&dot.explode_radially(30., None, 5, true)?),
+            Tree::union(dot.explode_radially(30., None, 5, true)?),
             // Tree::union(&dot.explode_radially(30., Some(axis), 5, true)?),
             dot,
         ])
@@ -118,7 +118,7 @@ fn explode_radially2() {
         );
         let axis = y;
         Ok(union![
-            Tree::union(&dot.explode_radially(30., Some(axis), 5, false)?),
+            Tree::union(dot.explode_radially(30., Some(axis), 5, false)?),
             dot,
         ])
     })
@@ -146,8 +146,8 @@ fn mirror() {
         ])?;
         Ok(union![
             original.clone(),
-            mirror!(r.dim_unit_vec(Axis::X), original.clone()),
-            Tree::Mirror(Axis::X.into(), vec![original]),
+            mirror![r.dim_unit_vec(Axis::X), original.clone()],
+            Tree::mirror(Axis::X, original),
         ])
     })
 }
@@ -424,7 +424,7 @@ fn simple_dot() {
                 rot: R3::identity(),
             },
         );
-        Ok(dot![n])
+        Ok(n.into())
     })
 }
 
@@ -440,7 +440,7 @@ fn dot_rot() {
                 rot: axis_radians(V3::new(1., 1., 0.), PI / 2.),
             },
         );
-        Ok(dot![n])
+        Ok(n.into())
     })
 }
 
@@ -456,7 +456,7 @@ fn dot_cyl() {
                 rot: axis_radians(V3::x_axis().unwrap(), PI / 4.),
             },
         );
-        Ok(dot![n])
+        Ok(n.into())
     })
 }
 
@@ -517,9 +517,9 @@ fn rect2() {
             },
         )?;
         Ok(union![
-            hull![dot![r.get_dot(C2::P00)], dot![r.get_dot(C2::P01)]],
-            hull![dot![r.get_dot(C2::P10)], dot![r.get_dot(C2::P11)]],
-            hull![dot![r.get_dot(C2::P10)], dot![r.get_dot(C2::P00)]],
+            hull![r.get_dot(C2::P00), r.get_dot(C2::P01)],
+            hull![r.get_dot(C2::P10), r.get_dot(C2::P11)],
+            hull![r.get_dot(C2::P10), r.get_dot(C2::P00)],
         ])
     })
 }
@@ -589,7 +589,7 @@ fn post_old_align() {
                 radians: 0.,
             },
         )?;
-        Ok(hull![dot![p.bot], dot![p.top]])
+        Ok(hull![p.bot, p.top])
     })
 }
 
@@ -705,13 +705,13 @@ fn spiral_cuboid() {
             },
         )?;
         Ok(union![
-            hull![dot![p.bot.get_dot(C2::P00)], dot![p.bot.get_dot(C2::P01)]],
-            hull![dot![p.bot.get_dot(C2::P10)], dot![p.bot.get_dot(C2::P11)]],
-            hull![dot![p.bot.get_dot(C2::P10)], dot![p.bot.get_dot(C2::P00)]],
-            hull![dot![p.top.get_dot(C2::P00)], dot![p.top.get_dot(C2::P01)]],
-            hull![dot![p.top.get_dot(C2::P10)], dot![p.top.get_dot(C2::P11)]],
-            hull![dot![p.top.get_dot(C2::P10)], dot![p.top.get_dot(C2::P00)]],
-            hull![dot![p.top.get_dot(C2::P01)], dot![p.bot.get_dot(C2::P11)]],
+            hull![p.bot.get_dot(C2::P00), p.bot.get_dot(C2::P01)],
+            hull![p.bot.get_dot(C2::P10), p.bot.get_dot(C2::P11)],
+            hull![p.bot.get_dot(C2::P10), p.bot.get_dot(C2::P00)],
+            hull![p.top.get_dot(C2::P00), p.top.get_dot(C2::P01)],
+            hull![p.top.get_dot(C2::P10), p.top.get_dot(C2::P11)],
+            hull![p.top.get_dot(C2::P10), p.top.get_dot(C2::P00)],
+            hull![p.top.get_dot(C2::P01), p.bot.get_dot(C2::P11)],
         ])
     })
 }

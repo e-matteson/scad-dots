@@ -375,7 +375,7 @@ impl Cuboid {
         for align in CuboidAlign::all_corners() {
             marks.push(mark(self.pos(align), 1.));
         }
-        Tree::Union(marks)
+        Tree::union(marks)
     }
 
     pub fn link(&self, style: CuboidLink) -> Result<Tree, Error> {

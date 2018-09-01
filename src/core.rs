@@ -78,12 +78,22 @@ pub enum SnakeLink {
 
 #[derive(Debug, Clone)]
 pub enum Tree {
+    Object(TreeObject),
+    Operator(TreeOperator),
+}
+
+#[derive(Debug, Clone)]
+pub enum TreeObject {
     /// A primitive object representing a dot with equal side lengths.
     Dot(Dot),
     /// A primitive object representing a cylinder with an arbitrary height and diameter.
     Cylinder(Cylinder),
     /// A primitive object representing a 2d polygon that it is extruded into the 3rd dimension.
     Extrusion(Extrusion),
+}
+
+#[derive(Debug, Clone)]
+pub enum TreeOperator {
     /// An operator that takes the union of its children.
     Union(Vec<Tree>),
     /// An operator that gets the smallest convex shape that encloses all the elements
@@ -91,8 +101,8 @@ pub enum Tree {
     /// Subtract all following elements from the first
     Diff(Vec<Tree>),
     Intersect(Vec<Tree>),
-    Color(ColorSpec, Vec<Tree>),
-    Mirror(V3, Vec<Tree>), // Mirrors across plane with the given normal vec
+    Color(ColorSpec, Box<Tree>),
+    Mirror(V3, Box<Tree>), // Mirrors across plane with the given normal vec
 }
 
 /// Extrude the given perimeter into the z dimension. The bottom surface of the extrusion will be on the z=`bottom_z` plane, and have the given z `thickness`.
@@ -484,98 +494,116 @@ impl Snake {
 
 #[macro_export]
 macro_rules! red {
-    ( $( $tree:expr),* $(,)* ) => {
-        Tree::Color(ColorSpec::Red, vec![
-            $($tree.into(),)*
-        ])
+    ( $( $tree_like:expr),* $(,)* ) => {
+        Tree::color(
+            ColorSpec::Red,
+            &[ $($tree_like,)* ]
+        )
     }
 }
 
 #[macro_export]
 macro_rules! union {
-    ( $( $tree:expr),* $(,)* ) => {
-        Tree::Union(vec![
-            $($tree.into(),)*
-        ])
+    ( $( $tree_like:expr),* $(,)* ) => {
+        Tree::union(
+            vec![ $(Tree::from($tree_like),)* ]
+        )
     }
 }
 
 #[macro_export]
 macro_rules! hull {
-    ( $( $tree:expr),* $(,)* ) => {
-        Tree::Hull(vec![
-            $($tree.into(),)*
-        ])
+    ( $( $tree_like:expr),* $(,)* ) => {
+        Tree::hull(
+            vec![ $(Tree::from($tree_like),)* ]
+        )
     }
 }
 
 #[macro_export]
 macro_rules! diff {
-    ( $( $tree:expr),* $(,)* ) => {
-        Tree::Diff(vec![
-            $($tree.into(),)*
-        ])
+    ( $( $tree_like:expr),* $(,)* ) => {
+        Tree::diff(
+            vec![ $(Tree::from($tree_like),)* ]
+        )
     }
 }
 
 #[macro_export]
 macro_rules! intersect {
-    ( $( $tree:expr),* $(,)* ) => {
-        Tree::Intersect(vec![
-            $($tree.into(),)*
-        ])
+    ( $( $tree_like:expr),* $(,)* ) => {
+        Tree::intersect(
+            vec![ $(Tree::from($tree_like),)* ]
+        )
     }
 }
 
 #[macro_export]
 macro_rules! mirror {
-    ($normal:expr, $( $tree:expr),* $(,)* ) => {
-        Tree::Mirror($normal.into(), vec![
-            $($tree.into(),)*
-        ])
-    }
-}
-
-#[macro_export]
-macro_rules! dot {
-    ( $tree:expr ) => {
-        Tree::Dot($tree.into())
+    ($normal:expr, $tree_like:expr $(,)* ) => {
+        Tree::mirror($normal, Tree::from($tree_like))
     };
 }
 
 impl Tree {
-    pub fn union<'a, T>(tree_like: &'a [T]) -> Tree
+    pub fn union<T>(tree_like: Vec<T>) -> Tree
     where
-        Tree: From<&'a T>,
+        Tree: From<T>,
     {
-        Tree::Union(tree_like.iter().map(|x| x.into()).collect())
+        Tree::Operator(TreeOperator::Union(
+            tree_like.into_iter().map(|x| x.into()).collect(),
+        ))
     }
 
-    pub fn hull<'a, T>(tree_like: &'a [T]) -> Tree
+    pub fn hull<T>(tree_like: Vec<T>) -> Tree
     where
-        Tree: From<&'a T>,
+        Tree: From<T>,
     {
-        Tree::Hull(tree_like.iter().map(|x| x.into()).collect())
+        Tree::Operator(TreeOperator::Hull(
+            tree_like.into_iter().map(|x| x.into()).collect(),
+        ))
     }
 
-    pub fn diff<'a, T>(tree_like: &'a [T]) -> Tree
+    pub fn diff<T>(tree_like: Vec<T>) -> Tree
     where
-        Tree: From<&'a T>,
+        Tree: From<T>,
     {
-        Tree::Diff(tree_like.iter().map(|x| x.into()).collect())
+        Tree::Operator(TreeOperator::Diff(
+            tree_like.into_iter().map(|x| x.into()).collect(),
+        ))
     }
 
-    pub fn intersect<'a, T>(tree_like: &'a [T]) -> Tree
+    pub fn intersect<T>(tree_like: Vec<T>) -> Tree
     where
-        Tree: From<&'a T>,
+        Tree: From<T>,
     {
-        Tree::Intersect(tree_like.iter().map(|x| x.into()).collect())
+        Tree::Operator(TreeOperator::Intersect(
+            tree_like.into_iter().map(|x| x.into()).collect(),
+        ))
+    }
+
+    pub fn mirror<S, T>(normal: S, tree_like: T) -> Tree
+    where
+        Tree: From<T>,
+        S: Into<V3>,
+    {
+        Tree::Operator(TreeOperator::Mirror(
+            normal.into(),
+            Box::new(tree_like.into()),
+        ))
+    }
+
+    pub fn color<T>(color: ColorSpec, tree_like: T) -> Tree
+    where
+        Tree: From<T>,
+    {
+        Tree::Operator(TreeOperator::Color(color, Box::new(tree_like.into())))
     }
 }
 
 impl From<Dot> for Tree {
     fn from(dot: Dot) -> Tree {
-        dot![dot]
+        Tree::Object(TreeObject::Dot(dot))
     }
 }
 
@@ -585,12 +613,6 @@ where
 {
     fn from(tree_like: &'a T) -> Tree {
         tree_like.to_owned().into()
-    }
-}
-
-impl From<Cylinder> for Tree {
-    fn from(cylinder: Cylinder) -> Tree {
-        Tree::Cylinder(cylinder)
     }
 }
 
@@ -632,9 +654,11 @@ impl Cylinder {
     pub fn center_top(&self) -> P3 {
         self.center_bot_pos + self.dim_vec_axis()
     }
+}
 
-    pub fn link(&self) -> Tree {
-        self.into()
+impl From<Cylinder> for Tree {
+    fn from(cylinder: Cylinder) -> Tree {
+        Tree::Object(TreeObject::Cylinder(cylinder))
     }
 }
 
@@ -665,7 +689,7 @@ where
         .into_iter()
         .map(|(a, b)| hull![a.into(), b.into()])
         .collect();
-    Ok(Tree::Union(segments))
+    Ok(Tree::union(segments))
 }
 
 pub fn chain_loop<T>(things: &[T]) -> Result<Tree, Error>
@@ -699,7 +723,8 @@ where
 
 pub fn mark(pos: P3, size: f32) -> Tree {
     // Put a little sphere at the given position, for debugging
-    let s = Dot::new(
+    // TODO make it red
+    Dot::new(
         Shape::Sphere,
         DotSpec {
             pos: pos,
@@ -707,8 +732,7 @@ pub fn mark(pos: P3, size: f32) -> Tree {
             size: size,
             rot: R3::identity(),
         },
-    );
-    dot![s]
+    ).into()
 }
 
 fn unwrap_rot_axis(rot: R3) -> Result<V3, Error> {
@@ -849,19 +873,17 @@ impl Extrusion {
             thickness,
         }
     }
+}
 
-    pub fn link(&self) -> Tree {
-        Tree::Extrusion(self.clone())
+impl From<Extrusion> for Tree {
+    fn from(extrusion: Extrusion) -> Tree {
+        Tree::Object(TreeObject::Extrusion(extrusion))
     }
 }
 
 pub fn drop_solid(dots: &[Dot], bottom_z: f32, shape: Option<Shape>) -> Tree {
     let dropped_dots = dots.iter().map(|d| d.drop(bottom_z, shape));
-    let all_dots: Vec<_> = dots
-        .into_iter()
-        .cloned()
-        .chain(dropped_dots)
-        .map(|d| d.into())
-        .collect();
-    Tree::Hull(all_dots)
+    let all_dots: Vec<_> =
+        dots.into_iter().cloned().chain(dropped_dots).collect();
+    Tree::hull(all_dots)
 }

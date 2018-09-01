@@ -179,14 +179,14 @@ impl Rect {
         for align in RectAlign::all_corners() {
             marks.push(mark(self.pos(align), 1.));
         }
-        Tree::Union(marks)
+        Tree::union(marks)
     }
 
     pub fn link(&self, style: RectLink) -> Result<Tree, Error> {
         let dots = self.dots();
         Ok(match style {
-            RectLink::Dots => Tree::union(&dots),
-            RectLink::Solid => Tree::hull(&dots),
+            RectLink::Dots => Tree::union(dots),
+            RectLink::Solid => Tree::hull(dots),
             RectLink::Frame => chain_loop(&[
                 self.get_dot(C2::P00),
                 self.get_dot(C2::P01),

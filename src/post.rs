@@ -216,8 +216,8 @@ impl Post {
 
     pub fn link(&self, style: PostLink) -> Tree {
         match style {
-            PostLink::Solid => hull![dot![self.bot], dot![self.top]],
-            PostLink::Dots => union![dot![self.bot], dot![self.top]],
+            PostLink::Solid => hull![self.bot, self.top],
+            PostLink::Dots => union![self.bot, self.top],
         }
     }
 }
@@ -402,7 +402,7 @@ impl PostSnake {
                     .iter()
                     .map(|post| post.link(PostLink::Solid))
                     .collect();
-                Ok(Tree::Union(v))
+                Ok(Tree::union(v))
             }
         }
     }

@@ -1,6 +1,6 @@
 use scad_generator::*;
 
-use core::{Cylinder, Dot, Extrusion, Shape, Tree};
+use core::{Cylinder, Dot, Extrusion, Shape, Tree, TreeObject, TreeOperator};
 use utils::{rotate, Corner3 as C3, P2, P3, V2, V3};
 
 use failure::Error;
@@ -62,54 +62,57 @@ where
     Ok(scad_file)
 }
 
-impl Tree {
-    // Some helpful methods for implementing render.
-    pub fn get_operation(&self) -> ScadObject {
-        match *self {
-            Tree::Union(_) => scad!(Union),
-            Tree::Hull(_) => scad!(Hull),
-            Tree::Diff(_) => scad!(Difference),
-            Tree::Intersect(_) => scad!(Intersection),
-            Tree::Color(color, _) => scad!(Color(color.rgb())),
-            Tree::Mirror(normal, _) => scad!(Mirror(normal)),
-            Tree::Dot(..) | Tree::Cylinder(..) | Tree::Extrusion(..) => {
-                Tree::panic_not_operator()
-            }
+impl TreeOperator {
+    fn operation(&self) -> ScadObject {
+        match self {
+            TreeOperator::Union(_) => scad!(Union),
+            TreeOperator::Hull(_) => scad!(Hull),
+            TreeOperator::Diff(_) => scad!(Difference),
+            TreeOperator::Intersect(_) => scad!(Intersection),
+            TreeOperator::Color(color, _) => scad!(Color(color.rgb())),
+            TreeOperator::Mirror(normal, _) => scad!(Mirror(*normal)),
         }
     }
 
-    pub fn get_children(&self) -> Vec<Tree> {
-        match *self {
-            Tree::Union(ref v)
-            | Tree::Hull(ref v)
-            | Tree::Diff(ref v)
-            | Tree::Color(_, ref v)
-            | Tree::Mirror(_, ref v)
-            | Tree::Intersect(ref v) => v.clone(),
-            Tree::Dot(..) | Tree::Cylinder(..) | Tree::Extrusion(..) => {
-                Tree::panic_not_operator()
-            }
+    fn children(&self) -> Vec<Tree> {
+        // TODO return refs?
+        match self {
+            TreeOperator::Union(ref v)
+            | TreeOperator::Hull(ref v)
+            | TreeOperator::Diff(ref v)
+            | TreeOperator::Intersect(ref v) => v.clone(),
+
+            TreeOperator::Color(_, ref tree)
+            | TreeOperator::Mirror(_, ref tree) => vec![*tree.to_owned()],
         }
     }
+}
 
-    fn panic_not_operator() -> ! {
-        panic!("not an operator, you should have checked for Dot already!")
+impl Render for TreeObject {
+    fn render(&self, options: RenderQuality) -> Result<ScadObject, Error> {
+        match self {
+            TreeObject::Dot(ref dot) => dot.render(options),
+            TreeObject::Cylinder(ref cylinder) => cylinder.render(options),
+            TreeObject::Extrusion(ref extrusion) => extrusion.render(options),
+        }
+    }
+}
+
+impl Render for TreeOperator {
+    fn render(&self, options: RenderQuality) -> Result<ScadObject, Error> {
+        let mut operation = self.operation();
+        for child in self.children() {
+            operation.add_child(child.render(options)?);
+        }
+        Ok(operation)
     }
 }
 
 impl Render for Tree {
     fn render(&self, options: RenderQuality) -> Result<ScadObject, Error> {
-        match *self {
-            Tree::Dot(ref dot) => dot.render(options),
-            Tree::Cylinder(ref cylinder) => cylinder.render(options),
-            Tree::Extrusion(ref extrusion) => extrusion.render(options),
-            _ => {
-                let mut operation = self.get_operation();
-                for child in self.get_children() {
-                    operation.add_child(child.render(options)?);
-                }
-                Ok(operation)
-            }
+        match self {
+            Tree::Object(ref object) => object.render(options),
+            Tree::Operator(ref operator) => operator.render(options),
         }
     }
 }
