@@ -1,0 +1,38 @@
+$fn=5;
+union()
+{
+	translate([12.5,0,-1.6506348])
+	{
+		rotate(30.000006,[0,-1,0])
+		{
+			cylinder(h=50,d=10);
+		}
+	}
+	color([1,0,0])
+	{
+		union()
+		{
+			translate([12.5,0,-1.6506348])
+			{
+				rotate(0,[0,0,1])
+				{
+					sphere(d=4);
+				}
+			}
+			translate([0,0,20])
+			{
+				rotate(0,[0,0,1])
+				{
+					sphere(d=4);
+				}
+			}
+			translate([-12.5,0,41.650635])
+			{
+				rotate(0,[0,0,1])
+				{
+					sphere(d=4);
+				}
+			}
+		}
+	}
+}

@@ -3,7 +3,7 @@ extern crate approx;
 extern crate nalgebra;
 extern crate nom;
 
-#[macro_use(union, hull, mirror)]
+#[macro_use(union, hull, mirror, red)]
 extern crate scad_dots;
 
 use scad_dots::harness::{check_model, Action, MAX_RELATIVE};
@@ -72,6 +72,29 @@ fn cylinder_spec3() {
             rot: axis_degrees(Axis::X, 15.),
         };
         Ok(Cylinder::new(spec).into())
+    })
+}
+
+#[test]
+fn cylinder_spec4() {
+    check_model("cylinder_spec4", Action::Test, || {
+        let spec = CylinderSpec {
+            pos: P3::new(0., 0., 20.),
+            align: CylinderAlign::Centroid,
+            diameter: 10.,
+            height: 50.,
+            rot: axis_degrees(Axis::Y, -30.),
+        };
+        let cyl = Cylinder::new(spec);
+        let marker_size = 4.;
+        Ok(union![
+            cyl,
+            red![union![
+                mark(cyl.pos(CylinderAlign::EndCenter(C1::P0)), marker_size),
+                mark(cyl.pos(CylinderAlign::Centroid), marker_size),
+                mark(cyl.pos(CylinderAlign::EndCenter(C1::P1)), marker_size),
+            ]]
+        ])
     })
 }
 

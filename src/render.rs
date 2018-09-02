@@ -1,6 +1,8 @@
 use scad_generator::*;
 
-use core::utils::{rotate, Corner3 as C3, P2, P3, V2, V3};
+use core::utils::{
+    radians_to_degrees, rotate, unwrap_rot_axis, Corner3 as C3, P2, P3, V2, V3,
+};
 use core::{Cylinder, Dot, Extrusion, Shape, Tree, TreeObject, TreeOperator};
 use errors::{ResultExt, ScadDotsError};
 
@@ -142,11 +144,11 @@ impl Render for Cylinder {
         _options: RenderQuality,
     ) -> Result<ScadObject, ScadDotsError> {
         let obj = scad!(
-                Translate(self.center_bot_pos_vec());{
+                Translate(self.scad_translation());{
                     scad!(
                         Rotate(
-                            self.rot_degs_for_rendering(),
-                            self.rot_axis_for_rendering()?
+                            self.rot_degs(),
+                            self.rot_axis()?
                         );{
                             // Make cylinder w/ bottom face centered on origin
                             scad!(
@@ -161,8 +163,16 @@ impl Render for Cylinder {
 }
 
 impl Cylinder {
-    fn center_bot_pos_vec(&self) -> V3 {
+    fn scad_translation(&self) -> V3 {
         self.center_bot_pos - P3::origin()
+    }
+
+    fn rot_degs(&self) -> f32 {
+        radians_to_degrees(self.rot.angle())
+    }
+
+    fn rot_axis(&self) -> Result<V3, ScadDotsError> {
+        unwrap_rot_axis(self.rot)
     }
 }
 
@@ -231,7 +241,6 @@ impl Render for Extrusion {
         &self,
         _options: RenderQuality,
     ) -> Result<ScadObject, ScadDotsError> {
-        // TODO update, add translation
         let points: Vec<V2> =
             self.perimeter.iter().map(|p| p - P2::origin()).collect();
         let mut params = LinExtrudeParams::default();
