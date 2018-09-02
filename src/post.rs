@@ -18,11 +18,11 @@ pub struct PostSpec {
     pub len: f32,
     pub rot: R3,
     pub size: f32,
+    pub shapes: PostShapes,
 }
 
 pub trait PostSpecTrait: Copy {
-    fn to_dot_spec(&self, upper_or_lower: C1)
-        -> Result<DotSpec, ScadDotsError>;
+    fn to_dot(&self, upper_or_lower: C1) -> Result<Dot, ScadDotsError>;
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -68,12 +68,12 @@ pub enum PostSnakeLink {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Post {
-    pub fn new<T>(shapes: PostShapes, spec: T) -> Result<Post, ScadDotsError>
+    pub fn new<T>(spec: T) -> Result<Post, ScadDotsError>
     where
         T: PostSpecTrait,
     {
-        let bot = Dot::new(shapes.get(C1::P0), spec.to_dot_spec(C1::P0)?);
-        let top = Dot::new(shapes.get(C1::P1), spec.to_dot_spec(C1::P1)?);
+        let bot = spec.to_dot(C1::P0)?;
+        let top = spec.to_dot(C1::P1)?;
 
         // TODO fix dimension checking, also dist() changed
         // if bot.dist(top) < size {
@@ -198,23 +198,20 @@ impl PostSpec {
 }
 
 impl PostSpecTrait for PostSpec {
-    fn to_dot_spec(
-        &self,
-        upper_or_lower: C1,
-    ) -> Result<DotSpec, ScadDotsError> {
+    fn to_dot(&self, upper_or_lower: C1) -> Result<Dot, ScadDotsError> {
         let origin =
             self.pos
                 - self.align.offset(self.size, self.len - self.size, self.rot);
 
         let pos =
             origin + upper_or_lower.offset(self.len - self.size, self.rot);
-
-        Ok(DotSpec {
+        let spec = DotSpec {
             pos: pos,
             align: C3::P000.into(),
             size: self.size,
             rot: self.rot,
-        })
+        };
+        Ok(Dot::new(self.shapes.get(upper_or_lower), spec))
     }
 }
 

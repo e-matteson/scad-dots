@@ -33,7 +33,7 @@ pub enum DotAlign {
 }
 
 /// The possible shapes of a dot
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Shape {
     Cube,
     Sphere,

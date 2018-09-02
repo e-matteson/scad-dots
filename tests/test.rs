@@ -148,17 +148,15 @@ fn explode_radially2() {
 #[test]
 fn mirror() {
     check_model("mirror", Action::Test, || {
-        let r = Rect::new(
-            RectShapes::Cube,
-            RectSpec {
-                pos: P3::origin(),
-                align: RectAlign::origin(),
-                y_dim: 10.0,
-                x_dim: 5.0,
-                size: 1.0,
-                rot: axis_radians(V3::new(1.0, 0.0, -2.), PI / 2.0),
-            },
-        )?;
+        let r = Rect::new(RectSpec {
+            pos: P3::origin(),
+            align: RectAlign::origin(),
+            y_length: 10.0,
+            x_length: 5.0,
+            size: 1.0,
+            rot: axis_radians(V3::new(1.0, 0.0, -2.), PI / 2.0),
+            shapes: RectShapes::Cube,
+        })?;
         let original = chain(&[
             r.get_dot(C2::P01),
             r.get_dot(C2::P00),
@@ -176,17 +174,15 @@ fn mirror() {
 #[test]
 fn rect_cut_corners() {
     check_model("rect_cut_corners", Action::Test, || {
-        let r = Rect::new(
-            RectShapes::Cube,
-            RectSpec {
-                pos: P3::origin(),
-                align: RectAlign::origin(),
-                y_dim: 2.0,
-                x_dim: 4.0,
-                size: 1.0,
-                rot: axis_degrees(Axis::X, 45.),
-            },
-        )?;
+        let r = Rect::new(RectSpec {
+            pos: P3::origin(),
+            align: RectAlign::origin(),
+            y_length: 2.0,
+            x_length: 4.0,
+            size: 1.0,
+            rot: axis_degrees(Axis::X, 45.),
+            shapes: RectShapes::Cube,
+        })?;
         r.link(RectLink::Chamfer)
     })
 }
@@ -198,13 +194,14 @@ fn cuboid_chamfer_hole() {
         let hole_spec = CuboidSpecChamferZHole {
             pos: P3::origin(),
             align: CuboidAlign::center_face(CubeFace::Z0),
-            x_dim: 4.,
-            y_dim: 3.,
-            z_dim: 1.,
+            x_length: 4.,
+            y_length: 3.,
+            z_length: 1.,
             chamfer: Fraction::new(1.)?,
             rot: R3::identity(),
+            shapes: CuboidShapes::Cube,
         };
-        let hole = Cuboid::new(CuboidShapes::Cube, hole_spec)?;
+        let hole = Cuboid::new(hole_spec)?;
         hole.link(CuboidLink::ChamferZ)
     })
 }
@@ -228,18 +225,16 @@ fn triangle_simple() {
 #[test]
 fn map_cuboid() {
     check_model("map_cuboid", Action::Test, || {
-        let p1 = Cuboid::new(
-            CuboidShapes::Cube,
-            CuboidSpec {
-                pos: P3::origin(),
-                align: CuboidAlign::outside(C3::P111),
-                x_dim: 10.,
-                y_dim: 7.,
-                z_dim: 4.,
-                size: 1.,
-                rot: R3::identity(),
-            },
-        )?;
+        let p1 = Cuboid::new(CuboidSpec {
+            pos: P3::origin(),
+            align: CuboidAlign::outside(C3::P111),
+            x_length: 10.,
+            y_length: 7.,
+            z_length: 4.,
+            size: 1.,
+            rot: R3::identity(),
+            shapes: Shape::Cube.into(),
+        })?;
         let p2 = p1.map_translate(V3::new(0., -10., 0.));
         let p3 = p1.map_rotate(axis_radians(Axis::Z, -PI / 8.));
         let p4 = p1.map(&|d: &Dot| {
@@ -258,17 +253,15 @@ fn map_cuboid() {
 #[test]
 fn map_post() {
     check_model("map_post", Action::Test, || {
-        let p1 = Post::new(
-            PostShapes::Cube,
-            PostSpec {
-                pos: P3::new(4., 0., 10.),
-                align: PostAlign::outside(C3::P111),
-                len: 12.,
-                size: 2.,
-                rot: axis_radians(Axis::X, PI / 8.)
-                    * axis_radians(Axis::Y, PI / 2.),
-            },
-        )?;
+        let p1 = Post::new(PostSpec {
+            pos: P3::new(4., 0., 10.),
+            align: PostAlign::outside(C3::P111),
+            len: 12.,
+            size: 2.,
+            rot: axis_radians(Axis::X, PI / 8.)
+                * axis_radians(Axis::Y, PI / 2.),
+            shapes: PostShapes::Cube,
+        })?;
         let p2 = p1.map_translate(V3::new(0., 0., 4.));
         let axis =
             p1.pos(PostAlign::outside(C3::P001)) - p1.pos(PostAlign::origin());
@@ -286,17 +279,15 @@ fn map_post() {
 #[test]
 fn map_rect() {
     check_model("map_rect", Action::Test, || {
-        let r1 = Rect::new(
-            RectShapes::Cube,
-            RectSpec {
-                pos: P3::origin(),
-                align: RectAlign::origin(),
-                x_dim: 10.,
-                y_dim: 5.,
-                size: 2.,
-                rot: axis_radians(Axis::X, PI / 4.),
-            },
-        )?;
+        let r1 = Rect::new(RectSpec {
+            pos: P3::origin(),
+            align: RectAlign::origin(),
+            x_length: 10.,
+            y_length: 5.,
+            size: 2.,
+            rot: axis_radians(Axis::X, PI / 4.),
+            shapes: Shape::Cube.into(),
+        })?;
         let r2 = r1.map_translate(V3::new(3., 0., 5.));
         let r3 = r1.map_rotate(axis_radians(V3::new(1., 1., 0.), PI / 2.));
         Ok(union![
@@ -333,18 +324,16 @@ fn scad_equality() {
 #[test]
 fn cuboid_center_marks() {
     check_model("cuboid_center_marks", Action::Test, || {
-        let cuboid = Cuboid::new(
-            CuboidShapes::Cube,
-            CuboidSpec {
-                pos: P3::origin(),
-                align: CuboidAlign::origin(),
-                x_dim: 20.,
-                y_dim: 20.,
-                z_dim: 20.,
-                size: 3.,
-                rot: R3::identity(),
-            },
-        )?;
+        let cuboid = Cuboid::new(CuboidSpec {
+            pos: P3::origin(),
+            align: CuboidAlign::origin(),
+            x_length: 20.,
+            y_length: 20.,
+            z_length: 20.,
+            size: 3.,
+            rot: R3::identity(),
+            shapes: CuboidShapes::Cube,
+        })?;
         Ok(union![
             cuboid.link(CuboidLink::Solid)?,
             mark(cuboid.pos(CuboidAlign::center_face(CubeFace::X0)), 1.),
@@ -360,17 +349,15 @@ fn cuboid_center_marks() {
 #[test]
 fn rect_center_marks() {
     check_model("rect_center_marks", Action::Test, || {
-        let rect = Rect::new(
-            RectShapes::Cube,
-            RectSpec {
-                pos: P3::origin(),
-                align: RectAlign::origin(),
-                x_dim: 20.,
-                y_dim: 20.,
-                size: 3.,
-                rot: R3::identity(),
-            },
-        )?;
+        let rect = Rect::new(RectSpec {
+            pos: P3::origin(),
+            align: RectAlign::origin(),
+            x_length: 20.,
+            y_length: 20.,
+            size: 3.,
+            rot: R3::identity(),
+            shapes: RectShapes::Cube,
+        })?;
         Ok(union![
             rect.link(RectLink::Solid)?,
             mark(rect.pos(RectAlign::center_face(CubeFace::X0)), 1.),
@@ -488,9 +475,9 @@ fn dot_cyl() {
 //         let d = CuboidSpecYAxis {
 //             pos: P3::origin(),
 //             align: CuboidAlign::outside_midpoint(C3::P011, C3::P100),
-//             x_dim: 7.,
+//             x_length: 7.,
 //             y_vec: V3::new(6., 10., -2.),
-//             z_dim: 5.,
+//             z_length: 5.,
 //             size: 2.,
 //         };
 //         let c = Cuboid::new(CuboidShapes::Cube, d)?;
@@ -501,17 +488,15 @@ fn dot_cyl() {
 #[test]
 fn simple_rect() {
     check_model("simple_rect", Action::Test, || {
-        let r = Rect::new(
-            RectShapes::Cube,
-            RectSpec {
-                pos: P3::origin(),
-                align: RectAlign::origin(),
-                y_dim: 5.0,
-                x_dim: 10.0,
-                size: 2.0,
-                rot: R3::identity(),
-            },
-        )?;
+        let r = Rect::new(RectSpec {
+            pos: P3::origin(),
+            align: RectAlign::origin(),
+            y_length: 5.0,
+            x_length: 10.0,
+            size: 2.0,
+            rot: R3::identity(),
+            shapes: RectShapes::Cube,
+        })?;
         assert_eq!(10., r.max_coord(Axis::X));
         assert_eq!(5., r.max_coord(Axis::Y));
         assert_eq!(2., r.max_coord(Axis::Z));
@@ -526,17 +511,15 @@ fn simple_rect() {
 fn rect2() {
     // Not carefully checked
     check_model("rect2", Action::Test, || {
-        let r = Rect::new(
-            RectShapes::Cylinder,
-            RectSpec {
-                pos: P3::origin(),
-                align: RectAlign::origin(),
-                y_dim: 10.0,
-                x_dim: 5.0,
-                size: 2.0,
-                rot: axis_radians(V3::new(1.0, 0.0, 0.0), PI / 4.0),
-            },
-        )?;
+        let r = Rect::new(RectSpec {
+            pos: P3::origin(),
+            align: RectAlign::origin(),
+            y_length: 10.0,
+            x_length: 5.0,
+            size: 2.0,
+            rot: axis_radians(V3::new(1.0, 0.0, 0.0), PI / 4.0),
+            shapes: RectShapes::Cylinder,
+        })?;
         Ok(union![
             hull![r.get_dot(C2::P00), r.get_dot(C2::P01)],
             hull![r.get_dot(C2::P10), r.get_dot(C2::P11)],
@@ -577,16 +560,14 @@ fn rect2() {
 #[test]
 fn simple_post() {
     check_model("simple_post", Action::Test, || {
-        let p = Post::new(
-            PostShapes::Cube,
-            PostSpec {
-                pos: P3::origin(),
-                align: PostAlign::origin(),
-                len: 10.,
-                rot: R3::identity(),
-                size: 3.0,
-            },
-        )?;
+        let p = Post::new(PostSpec {
+            pos: P3::origin(),
+            align: PostAlign::origin(),
+            len: 10.,
+            rot: R3::identity(),
+            size: 3.0,
+            shapes: PostShapes::Cube,
+        })?;
         Ok(p.link(PostLink::Solid))
     })
 }
@@ -594,20 +575,18 @@ fn simple_post() {
 #[test]
 fn post_old_align() {
     check_model("post_old_align", Action::Test, || {
-        let p = Post::new(
-            PostShapes::Round,
-            PostSpec {
-                pos: P3::origin(),
-                align: PostAlign::Corner {
-                    post: C1::P0,
-                    dot: C3::P111,
-                },
-                len: 6.,
-                rot: R3::identity(),
-                // top: P3::new(0.0, 0.0, 6.0),
-                size: 2.0,
+        let p = Post::new(PostSpec {
+            pos: P3::origin(),
+            align: PostAlign::Corner {
+                post: C1::P0,
+                dot: C3::P111,
             },
-        )?;
+            len: 6.,
+            rot: R3::identity(),
+            // top: P3::new(0.0, 0.0, 6.0),
+            size: 2.0,
+            shapes: PostShapes::Round,
+        })?;
         Ok(hull![p.bot, p.top])
     })
 }
@@ -615,18 +594,16 @@ fn post_old_align() {
 #[test]
 fn simple_cuboid() {
     check_model("simple_cuboid", Action::Test, || {
-        let p = Cuboid::new(
-            CuboidShapes::Cube,
-            CuboidSpec {
-                pos: P3::origin(),
-                align: CuboidAlign::origin(),
-                y_dim: 15.0,
-                x_dim: 10.0,
-                z_dim: 5.0,
-                size: 0.5,
-                rot: R3::identity(),
-            },
-        )?;
+        let p = Cuboid::new(CuboidSpec {
+            pos: P3::origin(),
+            align: CuboidAlign::origin(),
+            y_length: 15.0,
+            x_length: 10.0,
+            z_length: 5.0,
+            size: 0.5,
+            rot: R3::identity(),
+            shapes: CuboidShapes::Cube,
+        })?;
         assert_relative_eq!(
             P3::origin(),
             p.pos(CuboidAlign::origin()),
@@ -653,18 +630,16 @@ fn simple_cuboid() {
 #[test]
 fn cuboid_frame() {
     check_model("cuboid_frame", Action::Test, || {
-        let p = Cuboid::new(
-            CuboidShapes::Cube,
-            CuboidSpec {
-                pos: P3::origin(),
-                align: CuboidAlign::origin(),
-                y_dim: 15.0,
-                x_dim: 10.0,
-                z_dim: 5.0,
-                size: 0.5,
-                rot: R3::identity(),
-            },
-        )?;
+        let p = Cuboid::new(CuboidSpec {
+            pos: P3::origin(),
+            align: CuboidAlign::origin(),
+            y_length: 15.0,
+            x_length: 10.0,
+            z_length: 5.0,
+            size: 0.5,
+            rot: R3::identity(),
+            shapes: CuboidShapes::Cube,
+        })?;
         p.link(CuboidLink::Frame)
     })
 }
@@ -672,18 +647,16 @@ fn cuboid_frame() {
 #[test]
 fn cuboid_sides() {
     check_model("cuboid_sides", Action::Test, || {
-        let p = Cuboid::new(
-            CuboidShapes::Cube,
-            CuboidSpec {
-                pos: P3::origin(),
-                align: CuboidAlign::origin(),
-                y_dim: 15.0,
-                x_dim: 10.0,
-                z_dim: 5.0,
-                size: 0.5,
-                rot: R3::identity(),
-            },
-        )?;
+        let p = Cuboid::new(CuboidSpec {
+            pos: P3::origin(),
+            align: CuboidAlign::origin(),
+            y_length: 15.0,
+            x_length: 10.0,
+            z_length: 5.0,
+            size: 0.5,
+            rot: R3::identity(),
+            shapes: CuboidShapes::Cube,
+        })?;
         p.link(CuboidLink::Sides)
     })
 }
@@ -691,18 +664,16 @@ fn cuboid_sides() {
 #[test]
 fn cuboid_open_bot() {
     check_model("cuboid_open_bot", Action::Test, || {
-        let p = Cuboid::new(
-            CuboidShapes::Round,
-            CuboidSpec {
-                pos: P3::origin(),
-                align: CuboidAlign::origin(),
-                y_dim: 15.0,
-                x_dim: 10.0,
-                z_dim: 5.0,
-                size: 0.5,
-                rot: R3::identity(),
-            },
-        )?;
+        let p = Cuboid::new(CuboidSpec {
+            pos: P3::origin(),
+            align: CuboidAlign::origin(),
+            y_length: 15.0,
+            x_length: 10.0,
+            z_length: 5.0,
+            size: 0.5,
+            rot: R3::identity(),
+            shapes: CuboidShapes::Round,
+        })?;
         p.link(CuboidLink::OpenBot)
     })
 }
@@ -711,18 +682,16 @@ fn cuboid_open_bot() {
 fn spiral_cuboid() {
     // not carefully checked
     check_model("spiral_cuboid", Action::Test, || {
-        let p = Cuboid::new(
-            CuboidShapes::Cube,
-            CuboidSpec {
-                pos: P3::origin(),
-                align: CuboidAlign::origin(),
-                x_dim: 10.0,
-                y_dim: 3.0,
-                z_dim: 4.0,
-                size: 0.5,
-                rot: axis_radians(V3::x_axis().unwrap(), PI / 8.),
-            },
-        )?;
+        let p = Cuboid::new(CuboidSpec {
+            pos: P3::origin(),
+            align: CuboidAlign::origin(),
+            x_length: 10.0,
+            y_length: 3.0,
+            z_length: 4.0,
+            size: 0.5,
+            rot: axis_radians(V3::x_axis().unwrap(), PI / 8.),
+            shapes: CuboidShapes::Cube,
+        })?;
         Ok(union![
             hull![p.bot.get_dot(C2::P00), p.bot.get_dot(C2::P01)],
             hull![p.bot.get_dot(C2::P10), p.bot.get_dot(C2::P11)],
@@ -767,21 +736,19 @@ fn snake() {
 #[test]
 fn cuboid_corners() {
     check_model("cuboid_corners", Action::Test, || {
-        let r = Cuboid::new(
-            CuboidShapes::Cube,
-            CuboidSpec {
-                pos: P3::new(4., 6., 8.),
-                align: CuboidAlign::Corner {
-                    dot: C3::P100,
-                    cuboid: C3::P010,
-                },
-                y_dim: 15.0,
-                x_dim: 10.0,
-                z_dim: 5.0,
-                size: 2.,
-                rot: axis_radians(V3::x_axis().unwrap(), PI / 8.),
+        let r = Cuboid::new(CuboidSpec {
+            pos: P3::new(4., 6., 8.),
+            align: CuboidAlign::Corner {
+                dot: C3::P100,
+                cuboid: C3::P010,
             },
-        )?;
+            y_length: 15.0,
+            x_length: 10.0,
+            z_length: 5.0,
+            size: 2.,
+            rot: axis_radians(V3::x_axis().unwrap(), PI / 8.),
+            shapes: CuboidShapes::Cube,
+        })?;
 
         Ok(union![r.link(CuboidLink::Frame)?, r.mark_corners()])
     })

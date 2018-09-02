@@ -5,7 +5,7 @@ use core::utils::{
 use core::{mark, Dot, MapDots, MinMaxCoord, Shape, Tree};
 use errors::ScadDotsError;
 use post::{Post, PostLink};
-use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec, RectSpecTrait};
+use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec};
 
 #[derive(Debug, Clone, Copy, MapDots, MinMaxCoord)]
 /// A cuboid (box) is made of 2 rects, one above the other
@@ -18,22 +18,24 @@ pub struct Cuboid {
 pub struct CuboidSpec {
     pub pos: P3,
     pub align: CuboidAlign,
-    pub x_dim: f32,
-    pub y_dim: f32,
-    pub z_dim: f32,
+    pub x_length: f32,
+    pub y_length: f32,
+    pub z_length: f32,
     pub size: f32,
     pub rot: R3,
+    pub shapes: CuboidShapes,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct CuboidSpecChamferZHole {
     pub pos: P3,
     pub align: CuboidAlign,
-    pub x_dim: f32,
-    pub y_dim: f32,
-    pub z_dim: f32,
+    pub x_length: f32,
+    pub y_length: f32,
+    pub z_length: f32,
     pub chamfer: Fraction,
     pub rot: R3,
+    pub shapes: CuboidShapes,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -81,15 +83,9 @@ pub enum CuboidLink {
 }
 
 /// Any struct implementing this trait can be used to construct a Cuboid, by
-/// providing specifications for the upper and lower Rects that together form a
-/// Cuboid. The trait is parametrized over the type of Rect specifications it
-/// will return.
-pub trait CuboidSpecTrait<T>: Copy
-where
-    T: RectSpecTrait,
-{
-    /// Return a specification for creating either the upper or lower Rect forming the Cuboid.
-    fn to_rect_spec(&self, upper_or_lower: C1) -> Result<T, ScadDotsError>;
+/// constructing the upper and lower Rects that together form a Cuboid.
+pub trait CuboidSpecTrait: Copy {
+    fn to_rect(&self, upper_or_lower: C1) -> Result<Rect, ScadDotsError>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,40 +217,40 @@ impl From<CuboidAlign> for RectAlign {
 }
 
 impl Cuboid {
-    pub fn new<T, U>(
-        shapes: CuboidShapes,
-        spec: T,
-    ) -> Result<Cuboid, ScadDotsError>
+    pub fn new<T>(spec: T) -> Result<Cuboid, ScadDotsError>
     where
-        T: CuboidSpecTrait<U>,
-        U: RectSpecTrait,
+        T: CuboidSpecTrait,
     {
-        // TODO check whether size is larger than any of the dimensions
-        let bot = Rect::new(shapes.get(C1::P0), spec.to_rect_spec(C1::P0)?)?;
-        let top = Rect::new(shapes.get(C1::P1), spec.to_rect_spec(C1::P1)?)?;
-        Ok(Cuboid { bot: bot, top: top })
+        Ok(Cuboid {
+            bot: spec.to_rect(C1::P0)?,
+            top: spec.to_rect(C1::P1)?,
+        })
     }
 
-    pub fn from_dot(
+    pub fn from_dot<T>(
         dot: Dot,
-        size: f32,
-        shape: Shape,
-    ) -> Result<Cuboid, ScadDotsError> {
-        if let Shape::Cube = dot.shape {
-        } else {
+        new_size_of_dots: f32,
+        shapes: T,
+    ) -> Result<Cuboid, ScadDotsError>
+    where
+        T: Into<CuboidShapes>,
+    {
+        if dot.shape != Shape::Cube {
             return Err(ScadDotsError::Args
                 .context("Cuboid can only be created from a cube-shaped dot"));
         }
-        let d = CuboidSpec {
+
+        let spec = CuboidSpec {
             pos: dot.p000,
             align: CuboidAlign::origin(),
-            x_dim: dot.size,
-            y_dim: dot.size,
-            z_dim: dot.size,
-            size: size,
+            x_length: dot.size,
+            y_length: dot.size,
+            z_length: dot.size,
             rot: dot.rot,
+            size: new_size_of_dots,
+            shapes: shapes.into(),
         };
-        Cuboid::new(shape.into(), d)
+        Cuboid::new(spec)
     }
 
     // pub fn dot_face_protrusions(
@@ -421,55 +417,54 @@ impl Cuboid {
     }
 }
 
-impl CuboidSpecTrait<RectSpec> for CuboidSpec {
-    fn to_rect_spec(
-        &self,
-        upper_or_lower: C1,
-    ) -> Result<RectSpec, ScadDotsError> {
+impl CuboidSpecTrait for CuboidSpec {
+    fn to_rect(&self, upper_or_lower: C1) -> Result<Rect, ScadDotsError> {
         let dot_lengths = V3::new(self.size, self.size, self.size);
         let cuboid_lengths = V3::new(
-            self.x_dim - self.size,
-            self.y_dim - self.size,
-            self.z_dim - self.size,
+            self.x_length - self.size,
+            self.y_length - self.size,
+            self.z_length - self.size,
         );
         let origin =
             self.pos - self.align.offset(cuboid_lengths, dot_lengths, self.rot);
-        let pos = origin + upper_or_lower.offset(cuboid_lengths.z, self.rot);
-        Ok(RectSpec {
-            pos: pos,
+
+        let height = upper_or_lower.offset(cuboid_lengths.z, self.rot);
+
+        let spec = RectSpec {
+            pos: origin + height,
             align: RectAlign::origin(),
-            y_dim: self.y_dim,
-            x_dim: self.x_dim,
+            y_length: self.y_length,
+            x_length: self.x_length,
             size: self.size,
             rot: self.rot,
-        })
+            shapes: self.shapes.get(upper_or_lower),
+        };
+        Rect::new(spec)
     }
 }
 
 impl From<CuboidSpecChamferZHole> for CuboidSpec {
     fn from(spec: CuboidSpecChamferZHole) -> Self {
         CuboidSpec {
+            size: spec.chamfer.unwrap() * spec.x_length.min(spec.y_length) / 2.,
             pos: spec.pos,
             align: spec.align,
-            x_dim: spec.x_dim,
-            y_dim: spec.y_dim,
-            z_dim: spec.z_dim,
-            size: spec.chamfer.unwrap() * spec.x_dim.min(spec.y_dim) / 2.,
+            x_length: spec.x_length,
+            y_length: spec.y_length,
+            z_length: spec.z_length,
             rot: spec.rot,
+            shapes: spec.shapes,
         }
     }
 }
 
-impl CuboidSpecTrait<RectSpec> for CuboidSpecChamferZHole {
-    fn to_rect_spec(
-        &self,
-        upper_or_lower: C1,
-    ) -> Result<RectSpec, ScadDotsError> {
+impl CuboidSpecTrait for CuboidSpecChamferZHole {
+    fn to_rect(&self, upper_or_lower: C1) -> Result<Rect, ScadDotsError> {
         // TODO this is a bit inefficient because we'll re-convert self to
         // CuboidSpec every time this is called. But it makes the API a lot
         // simpler than the old system with multiple traits.
         let canonical_spec = CuboidSpec::from(*self);
-        canonical_spec.to_rect_spec(upper_or_lower)
+        canonical_spec.to_rect(upper_or_lower)
     }
 }
 

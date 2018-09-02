@@ -21,10 +21,11 @@ pub struct Rect {
 pub struct RectSpec {
     pub pos: P3,
     pub align: RectAlign,
-    pub x_dim: f32,
-    pub y_dim: f32,
+    pub x_length: f32,
+    pub y_length: f32,
     pub size: f32,
     pub rot: R3,
+    pub shapes: RectShapes,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -63,38 +64,26 @@ pub enum RectLink {
     Chamfer,
 }
 
-/// Any struct implementing this trait can be used to construct a Rect, by
-/// providing specifications for each of the 4 dots that form the corners of the
-/// Rect.
+/// Any struct implementing this trait can be used to construct a Rect, by by
+/// constructing each of the 4 dots that form the corners of the Rect.
 pub trait RectSpecTrait: Copy {
-    fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, ScadDotsError>;
+    fn to_dot(&self, corner: C2) -> Result<Dot, ScadDotsError>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Rect {
-    pub fn new<T>(shapes: RectShapes, spec: T) -> Result<Rect, ScadDotsError>
+    pub fn new<T>(spec: T) -> Result<Rect, ScadDotsError>
     where
         T: RectSpecTrait,
     {
         // TODO check dimensions, ensure positive
         Ok(Rect {
-            p00: Rect::make_dot(C2::P00, shapes, spec)?,
-            p01: Rect::make_dot(C2::P01, shapes, spec)?,
-            p10: Rect::make_dot(C2::P10, shapes, spec)?,
-            p11: Rect::make_dot(C2::P11, shapes, spec)?,
+            p00: spec.to_dot(C2::P00)?,
+            p01: spec.to_dot(C2::P01)?,
+            p10: spec.to_dot(C2::P10)?,
+            p11: spec.to_dot(C2::P11)?,
         })
-    }
-
-    fn make_dot<T>(
-        corner: C2,
-        shapes: RectShapes,
-        spec: T,
-    ) -> Result<Dot, ScadDotsError>
-    where
-        T: RectSpecTrait,
-    {
-        Ok(Dot::new(shapes.get(corner), spec.to_dot_spec(corner)?))
     }
 
     pub fn size(&self) -> f32 {
@@ -230,62 +219,81 @@ impl Rect {
 }
 
 impl RectSpec {
-    pub fn inner_y_dim(&self) -> f32 {
-        self.y_dim - 2. * self.size
+    /// The length of the Rect's inner edge along the given axis (relative to the default orientation).
+    pub fn inner_length(&self, axis: Axis) -> f32 {
+        match axis {
+            Axis::X => self.x_length - 2. * self.size,
+            Axis::Y => self.y_length - 2. * self.size,
+            Axis::Z => self.size,
+        }
     }
 
-    pub fn inner_x_dim(&self) -> f32 {
-        self.x_dim - 2. * self.size
-    }
-
+    /// Make a copy with a new position
     pub fn with_pos(self, new_pos: P3) -> Self {
-        RectSpec {
-            pos: new_pos,
-            align: self.align,
-            x_dim: self.x_dim,
-            y_dim: self.y_dim,
-            size: self.size,
-            rot: self.rot,
-        }
+        let mut new = self;
+        new.pos = new_pos;
+        new
     }
+
+    /// Make a copy with a new alignment
     pub fn with_align(self, new_align: RectAlign) -> Self {
-        RectSpec {
-            pos: self.pos,
-            align: new_align,
-            x_dim: self.x_dim,
-            y_dim: self.y_dim,
-            size: self.size,
-            rot: self.rot,
-        }
+        let mut new = self;
+        new.align = new_align;
+        new
     }
+
+    /// Make a copy with a new rotation
     pub fn with_rot(self, new_rot: R3) -> Self {
-        RectSpec {
-            pos: self.pos,
-            align: self.align,
-            x_dim: self.x_dim,
-            y_dim: self.y_dim,
-            size: self.size,
-            rot: new_rot,
-        }
+        let mut new = self;
+        new.rot = new_rot;
+        new
+    }
+
+    /// Make a copy with a new outer x edge length.
+    pub fn with_x_length(self, new_x_length: f32) -> Self {
+        let mut new = self;
+        new.x_length = new_x_length;
+        new
+    }
+
+    /// Make a copy with a new outer y edge length.
+    pub fn with_y_length(self, new_y_length: f32) -> Self {
+        let mut new = self;
+        new.y_length = new_y_length;
+        new
+    }
+
+    /// Make a copy with a new dot size.
+    pub fn with_size(self, new_size: f32) -> Self {
+        let mut new = self;
+        new.size = new_size;
+        new
+    }
+
+    /// Make a copy with new dot shapes
+    pub fn with_shapes(self, new_shapes: RectShapes) -> Self {
+        let mut new = self;
+        new.shapes = new_shapes;
+        new
     }
 }
 
 impl RectSpecTrait for RectSpec {
-    fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, ScadDotsError> {
+    fn to_dot(&self, corner: C2) -> Result<Dot, ScadDotsError> {
         let dot_lengths = V3::new(self.size, self.size, self.size);
         let rect_lengths =
-            V3::new(self.x_dim - self.size, self.y_dim - self.size, 0.);
+            V3::new(self.x_length - self.size, self.y_length - self.size, 0.);
         let origin =
             self.pos - self.align.offset(dot_lengths, rect_lengths, self.rot);
 
         let pos = origin + corner.offset(rect_lengths, self.rot);
-
-        Ok(DotSpec {
+        let spec = DotSpec {
             pos: pos,
             align: C3::P000.into(),
             rot: self.rot,
             size: self.size,
-        })
+        };
+        Ok(Dot::new(self.shapes.get(corner), spec))
     }
 }
 
@@ -404,16 +412,19 @@ impl RectShapes {
                 C2::P10 => p10,
                 C2::P11 => p11,
             },
-            _ => self.common(),
-        }
-    }
-
-    fn common(&self) -> Shape {
-        match *self {
             RectShapes::Cube => Shape::Cube,
             RectShapes::Sphere => Shape::Sphere,
             RectShapes::Cylinder => Shape::Cylinder,
-            _ => panic!("custom rect shape?"),
+        }
+    }
+}
+
+impl From<Shape> for RectShapes {
+    fn from(shape: Shape) -> Self {
+        match shape {
+            Shape::Cube => RectShapes::Cube,
+            Shape::Cylinder => RectShapes::Cylinder,
+            Shape::Sphere => RectShapes::Sphere,
         }
     }
 }
