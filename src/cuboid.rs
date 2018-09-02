@@ -52,7 +52,7 @@ pub enum CuboidAlign {
     },
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CuboidShapes {
     Cube,
     Sphere,
@@ -176,10 +176,11 @@ impl CuboidAlign {
         v
     }
 
-    pub fn offset(&self, cuboid_dim_vec: V3, dot_dim_vec: V3, rot: R3) -> V3 {
+    fn offset(&self, cuboid_dimensions: V3, dot_dimensions: V3, rot: R3) -> V3 {
         // TODO share code with RectAlign::offset()?
         let helper = |cuboid: C3, dot: C3| {
-            dot.offset(dot_dim_vec, rot) + cuboid.offset(cuboid_dim_vec, rot)
+            dot.offset(dot_dimensions, rot)
+                + cuboid.offset(cuboid_dimensions, rot)
         };
 
         match *self {
@@ -253,39 +254,26 @@ impl Cuboid {
         Cuboid::new(spec)
     }
 
-    // pub fn dot_face_protrusions(
-    //     dot: Dot,
-    //     face: CubeFace,
-    //     size: f32,
-    // ) -> Result<Rect> {
-    //     // Put a tiny sphere inside each corner of the dot's face, half
-    //     // sticking out of the surface. Useful for hulling the face with some
-    //     // other surface that's not parallel to it.
-    //     let cuboid = Cuboid::from_dot(dot, size, Shape::Sphere)?;
-    //     let rect = cuboid.get_rect(face);
-    //     let sign = if face.is_high() { 1. } else { -1. };
-    //     let offset_unit_vec = cuboid.dim_unit_vec(face.axis());
-    //     let offset = size / 2. * sign * offset_unit_vec;
-    //     Ok(rect.copy_translate(&offset))
-    // }
-
-    pub fn dim_vec(&self, axis: Axis) -> V3 {
+    /// Return a vector describing the direction and length of 1 edge of the
+    /// Cuboid (starting from the Cuboid's origin). The edge's axis is relative to
+    /// the Cuboid's default orientation, not it's actual rotated orientation.
+    pub fn edge(&self, axis: Axis) -> V3 {
         match axis {
-            Axis::X | Axis::Y => self.bot.dim_vec(axis),
+            Axis::X | Axis::Y => self.bot.edge(axis),
             Axis::Z => {
-                // NOTE used to subtract size, that was wrong
-                self.pos(CuboidAlign::outside(C3::P001))
-                    - self.pos(CuboidAlign::origin())
+                let origin = self.pos(CuboidAlign::origin());
+                let corner_point = self.pos(CuboidAlign::outside(C3::P001));
+                corner_point - origin
             }
         }
     }
 
-    pub fn dim_unit_vec(&self, axis: Axis) -> V3 {
-        self.dim_vec(axis).normalize()
+    pub fn edge_unit_vec(&self, axis: Axis) -> V3 {
+        self.edge(axis).normalize()
     }
 
-    pub fn dim_len(&self, axis: Axis) -> f32 {
-        self.dim_vec(axis).norm()
+    pub fn edge_length(&self, axis: Axis) -> f32 {
+        self.edge(axis).norm()
     }
 
     pub fn size(&self) -> f32 {
@@ -308,7 +296,7 @@ impl Cuboid {
     }
 
     fn pos_corner(&self, cuboid: C3, dot: C3) -> P3 {
-        self.get_dot(cuboid).pos(dot)
+        self.dot(cuboid).pos(dot)
     }
 
     pub fn rot(&self) -> R3 {
@@ -317,51 +305,51 @@ impl Cuboid {
         self.top.rot()
     }
 
-    pub fn get_dot(&self, corner: C3) -> Dot {
-        // TODO rename to just dot
+    pub fn dot(&self, corner: C3) -> Dot {
         let rect_corner = C2::from(corner);
         if corner.is_high(Axis::Z) {
-            self.top.get_dot(rect_corner)
+            self.top.dot(rect_corner)
         } else {
-            self.bot.get_dot(rect_corner)
+            self.bot.dot(rect_corner)
         }
     }
 
-    pub fn get_z_post(&self, corner: C2) -> Post {
+    /// Return a vertical post between the upper and lower Dots at the given xy corner.
+    pub fn vertical_post(&self, corner: C2) -> Post {
         // TODO rename to get_vertical_post or something, really unclear
         Post {
-            top: self.top.get_dot(corner),
-            bot: self.bot.get_dot(corner),
+            top: self.top.dot(corner),
+            bot: self.bot.dot(corner),
         }
     }
 
-    pub fn get_rect(&self, face: CubeFace) -> Rect {
+    pub fn rect(&self, face: CubeFace) -> Rect {
         match face {
             CubeFace::Z0 => self.bot,
             CubeFace::Z1 => self.top,
             CubeFace::X0 => Rect {
-                p00: self.bot.get_dot(C2::P00),
-                p10: self.bot.get_dot(C2::P01),
-                p01: self.top.get_dot(C2::P00),
-                p11: self.top.get_dot(C2::P01),
+                p00: self.bot.dot(C2::P00),
+                p10: self.bot.dot(C2::P01),
+                p01: self.top.dot(C2::P00),
+                p11: self.top.dot(C2::P01),
             },
             CubeFace::X1 => Rect {
-                p00: self.bot.get_dot(C2::P10),
-                p10: self.bot.get_dot(C2::P11),
-                p01: self.top.get_dot(C2::P10),
-                p11: self.top.get_dot(C2::P11),
+                p00: self.bot.dot(C2::P10),
+                p10: self.bot.dot(C2::P11),
+                p01: self.top.dot(C2::P10),
+                p11: self.top.dot(C2::P11),
             },
             CubeFace::Y0 => Rect {
-                p00: self.bot.get_dot(C2::P00),
-                p10: self.bot.get_dot(C2::P10),
-                p01: self.top.get_dot(C2::P00),
-                p11: self.top.get_dot(C2::P10),
+                p00: self.bot.dot(C2::P00),
+                p10: self.bot.dot(C2::P10),
+                p01: self.top.dot(C2::P00),
+                p11: self.top.dot(C2::P10),
             },
             CubeFace::Y1 => Rect {
-                p00: self.bot.get_dot(C2::P01),
-                p10: self.bot.get_dot(C2::P11),
-                p01: self.top.get_dot(C2::P01),
-                p11: self.top.get_dot(C2::P11),
+                p00: self.bot.dot(C2::P01),
+                p10: self.bot.dot(C2::P11),
+                p01: self.top.dot(C2::P01),
+                p11: self.top.dot(C2::P11),
             },
         }
     }
@@ -384,20 +372,18 @@ impl Cuboid {
             CuboidLink::Frame => union![
                 self.bot.link(RectLink::Frame)?,
                 self.top.link(RectLink::Frame)?,
-                self.get_z_post(C2::P00).link(PostLink::Solid),
-                self.get_z_post(C2::P10).link(PostLink::Solid),
-                self.get_z_post(C2::P11).link(PostLink::Solid),
-                self.get_z_post(C2::P01).link(PostLink::Solid),
+                self.vertical_post(C2::P00).link(PostLink::Solid),
+                self.vertical_post(C2::P10).link(PostLink::Solid),
+                self.vertical_post(C2::P11).link(PostLink::Solid),
+                self.vertical_post(C2::P01).link(PostLink::Solid),
             ],
             CuboidLink::Dots => union![
                 self.top.link(RectLink::Dots)?,
                 self.bot.link(RectLink::Dots)?,
             ],
-            CuboidLink::Face(face) => {
-                self.get_rect(face).link(RectLink::Solid)?
-            }
+            CuboidLink::Face(face) => self.rect(face).link(RectLink::Solid)?,
             CuboidLink::ZPost(corner) => {
-                self.get_z_post(corner).link(PostLink::Solid)
+                self.vertical_post(corner).link(PostLink::Solid)
             }
             CuboidLink::Sides => union![
                 self.link(CuboidLink::Face(CubeFace::X0))?,
@@ -469,7 +455,7 @@ impl CuboidSpecTrait for CuboidSpecChamferZHole {
 }
 
 impl CuboidShapes {
-    pub fn get(&self, upper_or_lower: C1) -> RectShapes {
+    fn get(&self, upper_or_lower: C1) -> RectShapes {
         match *self {
             CuboidShapes::Round => match upper_or_lower {
                 C1::P1 => RectShapes::Sphere,
@@ -498,16 +484,9 @@ impl CuboidShapes {
                     p11: p110,
                 },
             },
-            _ => self.common_rect(),
-        }
-    }
-
-    fn common_rect(&self) -> RectShapes {
-        match *self {
             CuboidShapes::Cube => RectShapes::Cube,
             CuboidShapes::Sphere => RectShapes::Sphere,
             CuboidShapes::Cylinder => RectShapes::Cylinder,
-            _ => panic!("custom cuboid shape?"),
         }
     }
 }

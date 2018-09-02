@@ -158,14 +158,14 @@ fn mirror() {
             shapes: RectShapes::Cube,
         })?;
         let original = chain(&[
-            r.get_dot(C2::P01),
-            r.get_dot(C2::P00),
-            r.get_dot(C2::P11),
-            r.get_dot(C2::P10),
+            r.dot(C2::P01),
+            r.dot(C2::P00),
+            r.dot(C2::P11),
+            r.dot(C2::P10),
         ])?;
         Ok(union![
             original.clone(),
-            mirror![r.dim_unit_vec(Axis::X), original.clone()],
+            mirror![r.edge_unit_vec(Axis::X), original.clone()],
             Tree::mirror(Axis::X, original),
         ])
     })
@@ -521,9 +521,9 @@ fn rect2() {
             shapes: RectShapes::Cylinder,
         })?;
         Ok(union![
-            hull![r.get_dot(C2::P00), r.get_dot(C2::P01)],
-            hull![r.get_dot(C2::P10), r.get_dot(C2::P11)],
-            hull![r.get_dot(C2::P10), r.get_dot(C2::P00)],
+            hull![r.dot(C2::P00), r.dot(C2::P01)],
+            hull![r.dot(C2::P10), r.dot(C2::P11)],
+            hull![r.dot(C2::P10), r.dot(C2::P00)],
         ])
     })
 }
@@ -611,7 +611,7 @@ fn simple_cuboid() {
         );
         // assert_relative_eq!(
         //     P3::new(10., 15., 5.),
-        //     p.top.get_dot(C2::P11).pos_corner(C3::P111),
+        //     p.top.dot(C2::P11).pos_corner(C3::P111),
         //     max_relative=MAX_RELATIVE
         // );
         // // assert_eq!(
@@ -693,13 +693,13 @@ fn spiral_cuboid() {
             shapes: CuboidShapes::Cube,
         })?;
         Ok(union![
-            hull![p.bot.get_dot(C2::P00), p.bot.get_dot(C2::P01)],
-            hull![p.bot.get_dot(C2::P10), p.bot.get_dot(C2::P11)],
-            hull![p.bot.get_dot(C2::P10), p.bot.get_dot(C2::P00)],
-            hull![p.top.get_dot(C2::P00), p.top.get_dot(C2::P01)],
-            hull![p.top.get_dot(C2::P10), p.top.get_dot(C2::P11)],
-            hull![p.top.get_dot(C2::P10), p.top.get_dot(C2::P00)],
-            hull![p.top.get_dot(C2::P01), p.bot.get_dot(C2::P11)],
+            hull![p.bot.dot(C2::P00), p.bot.dot(C2::P01)],
+            hull![p.bot.dot(C2::P10), p.bot.dot(C2::P11)],
+            hull![p.bot.dot(C2::P10), p.bot.dot(C2::P00)],
+            hull![p.top.dot(C2::P00), p.top.dot(C2::P01)],
+            hull![p.top.dot(C2::P10), p.top.dot(C2::P11)],
+            hull![p.top.dot(C2::P10), p.top.dot(C2::P00)],
+            hull![p.top.dot(C2::P01), p.bot.dot(C2::P11)],
         ])
     })
 }

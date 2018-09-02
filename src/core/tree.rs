@@ -151,7 +151,9 @@ where
     }
 }
 
-/// Call (.drop(bottom_z, shape))[Dot::drop] on each of the given Dots. Return the hull of all the original dots and all the dropped dots.
+// TODO use intra-docs link when that works.
+
+/// Call `.drop(bottom_z, shape)` on each of the given Dots. Return the hull of all the original dots and all the dropped dots.
 pub fn drop_solid(dots: &[Dot], bottom_z: f32, shape: Option<Shape>) -> Tree {
     let dropped_dots = dots.iter().map(|d| d.drop(bottom_z, shape));
     let all_dots: Vec<_> =

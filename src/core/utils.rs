@@ -385,6 +385,16 @@ impl From<Corner3> for Corner1 {
     }
 }
 
+impl From<Axis> for Corner3 {
+    fn from(axis: Axis) -> Self {
+        match axis {
+            Axis::X => Corner3::P100,
+            Axis::Y => Corner3::P010,
+            Axis::Z => Corner3::P001,
+        }
+    }
+}
+
 impl CubeFace {
     pub fn is_high(&self) -> bool {
         match *self {

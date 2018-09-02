@@ -39,7 +39,7 @@ pub enum PostAlign {
     },
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PostShapes {
     Cube,
     Sphere,
@@ -68,6 +68,7 @@ pub enum PostSnakeLink {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Post {
+    /// Create a new Post from the given specification.
     pub fn new<T>(spec: T) -> Result<Post, ScadDotsError>
     where
         T: PostSpecTrait,
@@ -82,6 +83,7 @@ impl Post {
         Ok(Post { top: top, bot: bot })
     }
 
+    /// Return the absolute position of the given alignment point on the Post.
     pub fn pos(&self, align: PostAlign) -> P3 {
         match align {
             PostAlign::Corner { post, dot } => self.pos_corner(post, dot),
@@ -98,45 +100,49 @@ impl Post {
     }
 
     fn pos_corner(&self, post: C1, dot: C3) -> P3 {
-        self.get_dot(post).pos(dot)
+        self.dot(post).pos(dot)
     }
 
-    pub fn get_dot(&self, upper_or_lower: C1) -> Dot {
+    /// Return a copy of the dot at the upper or lower end of the post.
+    pub fn dot(&self, upper_or_lower: C1) -> Dot {
         match upper_or_lower {
             C1::P0 => self.bot,
             C1::P1 => self.top,
         }
     }
 
-    pub fn dim_vec(&self, axis: Axis) -> V3 {
-        let point1 = self.pos(PostAlign::origin());
-        let point2 = match axis {
-            Axis::X => self.pos(PostAlign::outside(C3::P100)),
-            Axis::Y => self.pos(PostAlign::outside(C3::P010)),
-            Axis::Z => self.pos(PostAlign::outside(C3::P001)),
-        };
-        point2 - point1
+    /// Return a vector describing the direction and length of 1 outer edge of
+    /// the Post (starting from the Post's origin). The edge's axis is relative
+    /// to the Post's default orientation, not it's actual rotated orientation.
+    pub fn edge(&self, axis: Axis) -> V3 {
+        let origin = self.pos(PostAlign::origin());
+        let corner_point = self.pos(PostAlign::outside(axis.into()));
+        corner_point - origin
     }
 
-    pub fn dim_unit_vec(&self, axis: Axis) -> V3 {
-        self.dim_vec(axis).normalize()
+    /// Like `edge()`, but normalizes the vector's length to 1;
+    pub fn edge_unit_vec(&self, axis: Axis) -> V3 {
+        self.edge(axis).normalize()
     }
 
-    pub fn dim_len(&self, axis: Axis) -> f32 {
-        self.dim_vec(axis).norm()
+    /// Like `edge()`, but returns only the length of the edge.
+    pub fn edge_length(&self, axis: Axis) -> f32 {
+        self.edge(axis).norm()
     }
 
+    /// Return the size of the Post's Dots.
     pub fn size(&self) -> f32 {
         self.top.size
     }
 
+    /// Make a copy of this Post, but with the lower Dot raised up by the given distance.
     pub fn copy_raise_bot(&self, distance: f32) -> Result<Post, ScadDotsError> {
-        if distance > self.dim_len(Axis::Z) - self.top.size {
+        if distance > self.edge_length(Axis::Z) - self.top.size {
             return Err(ScadDotsError::Dimension.context(
                 "failed to copy_raise_bot, new post would be too short",
             ));
         }
-        let translation_vec = distance * self.dim_unit_vec(Axis::Z);
+        let translation_vec = distance * self.edge_unit_vec(Axis::Z);
         Ok(Post {
             top: self.top,
             bot: self.bot.translate(translation_vec),
@@ -187,13 +193,6 @@ impl Post {
             PostLink::Solid => hull![self.bot, self.top],
             PostLink::Dots => union![self.bot, self.top],
         }
-    }
-}
-
-impl PostSpec {
-    pub fn axis(&self) -> Result<V3, ScadDotsError> {
-        let v: V3 = C1::P1.into();
-        Ok((self.rot * v).normalize())
     }
 }
 
@@ -257,7 +256,7 @@ impl PostAlign {
         }
     }
 
-    pub fn offset(&self, dot_size: f32, post_length: f32, rot: R3) -> V3 {
+    fn offset(&self, dot_size: f32, post_length: f32, rot: R3) -> V3 {
         let helper = |post: C1, dot: C3| {
             let dot_spec = dot_size * V3::new(1., 1., 1.);
             dot.offset(dot_spec, rot) + post.offset(post_length, rot)
@@ -286,16 +285,9 @@ impl PostShapes {
                 C1::P0 => Shape::Cylinder,
                 C1::P1 => Shape::Sphere,
             },
-            _ => self.common(),
-        }
-    }
-
-    fn common(&self) -> Shape {
-        match *self {
             PostShapes::Cube => Shape::Cube,
             PostShapes::Sphere => Shape::Sphere,
             PostShapes::Cylinder => Shape::Cylinder,
-            _ => panic!("unhandled custom post shape?"),
         }
     }
 }

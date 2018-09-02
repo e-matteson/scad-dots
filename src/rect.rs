@@ -42,7 +42,7 @@ pub enum RectAlign {
     },
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RectShapes {
     Cube,
     Sphere,
@@ -110,11 +110,11 @@ impl Rect {
     }
 
     fn pos_corner(&self, rect: C2, dot: C3) -> P3 {
-        self.get_dot(rect).pos(dot)
+        self.dot(rect).pos(dot)
     }
 
     // Return a copy of 1 of the 4 corner dots.
-    pub fn get_dot(&self, corner: C2) -> Dot {
+    pub fn dot(&self, corner: C2) -> Dot {
         match corner {
             C2::P00 => self.p00,
             C2::P10 => self.p10,
@@ -124,29 +124,25 @@ impl Rect {
     }
 
     /// Return a vector describing the direction and length of 1 edge of the
-    /// Rect. The edge's axis is relative to the Rect's default orientation, not it's
-    /// actual rotated orientation.
-    pub fn dim_vec(&self, axis: Axis) -> V3 {
-        let point1 = self.pos(RectAlign::origin());
-        let point2 = match axis {
-            Axis::X => self.pos(RectAlign::outside(C3::P100)),
-            Axis::Y => self.pos(RectAlign::outside(C3::P010)),
-            Axis::Z => self.pos(RectAlign::outside(C3::P001)),
-        };
-        point2 - point1
+    /// Rect (starting from the Rect's origin). The edge's axis is relative to
+    /// the Rect's default orientation, not it's actual rotated orientation.
+    pub fn edge(&self, axis: Axis) -> V3 {
+        let origin = self.pos(RectAlign::origin());
+        let corner_point = self.pos(RectAlign::outside(axis.into()));
+        corner_point - origin
     }
 
     /// Return a unit vector describing the direction of 1 edge of the Rect. The
     /// edge's axis is relative to the Rect's default orientation, not it's
     /// actual rotated orientation.
-    pub fn dim_unit_vec(&self, axis: Axis) -> V3 {
-        self.dim_vec(axis).normalize()
+    pub fn edge_unit_vec(&self, axis: Axis) -> V3 {
+        self.edge(axis).normalize()
     }
 
     /// Return the length of 1 edge of the Rect. The edge's axis is relative to
     /// the Rect's default orientation, not it's actual rotated orientation.
-    pub fn dim_len(&self, axis: Axis) -> f32 {
-        self.dim_vec(axis).norm()
+    pub fn edge_length(&self, axis: Axis) -> f32 {
+        self.edge(axis).norm()
     }
 
     pub fn drop_solid(&self, bottom_z: f32, shape: Option<Shape>) -> Tree {
@@ -170,14 +166,14 @@ impl Rect {
             RectLink::Dots => Tree::union(dots),
             RectLink::Solid => Tree::hull(dots),
             RectLink::Frame => chain_loop(&[
-                self.get_dot(C2::P00),
-                self.get_dot(C2::P01),
-                self.get_dot(C2::P11),
-                self.get_dot(C2::P10),
+                self.dot(C2::P00),
+                self.dot(C2::P01),
+                self.dot(C2::P11),
+                self.dot(C2::P10),
             ])?,
             RectLink::YPosts => union![
-                hull![self.get_dot(C2::P00), self.get_dot(C2::P01)],
-                hull![self.get_dot(C2::P10), self.get_dot(C2::P11)],
+                hull![self.dot(C2::P00), self.dot(C2::P01)],
+                hull![self.dot(C2::P10), self.dot(C2::P11)],
             ],
             RectLink::Chamfer => self
                 .chamfer()
@@ -213,7 +209,7 @@ impl Rect {
     fn dots(&self) -> Vec<Dot> {
         C2::all_clockwise()
             .into_iter()
-            .map(|c| self.get_dot(c))
+            .map(|c| self.dot(c))
             .collect()
     }
 }
@@ -280,13 +276,14 @@ impl RectSpec {
 
 impl RectSpecTrait for RectSpec {
     fn to_dot(&self, corner: C2) -> Result<Dot, ScadDotsError> {
-        let dot_lengths = V3::new(self.size, self.size, self.size);
-        let rect_lengths =
+        let dot_dimensions = V3::new(self.size, self.size, self.size);
+        let rect_dimensions =
             V3::new(self.x_length - self.size, self.y_length - self.size, 0.);
         let origin =
-            self.pos - self.align.offset(dot_lengths, rect_lengths, self.rot);
+            self.pos
+                - self.align.offset(dot_dimensions, rect_dimensions, self.rot);
 
-        let pos = origin + corner.offset(rect_lengths, self.rot);
+        let pos = origin + corner.offset(rect_dimensions, self.rot);
         let spec = DotSpec {
             pos: pos,
             align: C3::P000.into(),
@@ -386,9 +383,9 @@ impl RectAlign {
         v
     }
 
-    pub fn offset(&self, dot_dim_vec: V3, rect_dim_vec: V3, rot: R3) -> V3 {
+    fn offset(&self, dot_dimensions: V3, rect_dimensions: V3, rot: R3) -> V3 {
         let helper = |dot: C3, rect: C2| {
-            dot.offset(dot_dim_vec, rot) + rect.offset(rect_dim_vec, rot)
+            dot.offset(dot_dimensions, rot) + rect.offset(rect_dimensions, rot)
         };
 
         match *self {
