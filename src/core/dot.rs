@@ -143,7 +143,7 @@ impl Dot {
     ) -> Dot {
         // Get the position of the center of the dot
         let pos = translate_p3_along_until(
-            self.pos(DotAlign::center_solid()),
+            self.pos(DotAlign::centroid()),
             direction,
             Axis::Z,
             bottom_z,
@@ -299,8 +299,8 @@ impl Dot {
             let new = Dot::new(
                 self.shape,
                 DotSpec {
-                    pos: self.pos(DotAlign::center_solid()) + offset,
-                    align: DotAlign::center_solid(),
+                    pos: self.pos(DotAlign::centroid()) + offset,
+                    align: DotAlign::centroid(),
                     size: self.size,
                     rot: rot,
                 },
@@ -338,7 +338,7 @@ impl DotAlign {
         C3::P000.into()
     }
 
-    pub fn center_solid() -> DotAlign {
+    pub fn centroid() -> DotAlign {
         DotAlign::Midpoint(C3::P000, C3::P111)
     }
 
@@ -471,7 +471,7 @@ pub fn mark(pos: P3, size: f32) -> Tree {
         Shape::Sphere,
         DotSpec {
             pos: pos,
-            align: DotAlign::center_solid(),
+            align: DotAlign::centroid(),
             size: size,
             rot: R3::identity(),
         },

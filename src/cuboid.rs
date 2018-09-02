@@ -5,7 +5,7 @@ use core::utils::{
 use core::{mark, Dot, MapDots, MinMaxCoord, Shape, Tree};
 use errors::ScadDotsError;
 use post::{Post, PostLink};
-use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec, RectSpecBasic};
+use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec, RectSpecTrait};
 
 #[derive(Debug, Clone, Copy, MapDots, MinMaxCoord)]
 /// A cuboid (box) is made of 2 rects, one above the other
@@ -15,7 +15,7 @@ pub struct Cuboid {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct CuboidSpecBasic {
+pub struct CuboidSpec {
     pub pos: P3,
     pub align: CuboidAlign,
     pub x_dim: f32,
@@ -80,15 +80,16 @@ pub enum CuboidLink {
     ChamferZ,
 }
 
-pub trait CuboidSpec: Copy + Sized {
-    type C: CuboidSpecToRect;
-    // TODO rename
-    fn into_convertable(self) -> Result<Self::C, ScadDotsError>;
-}
-
-pub trait CuboidSpecToRect: Copy {
-    type R: RectSpec;
-    fn to_rect_spec(&self, z_val: C1) -> Result<Self::R, ScadDotsError>;
+/// Any struct implementing this trait can be used to construct a Cuboid, by
+/// providing specifications for the upper and lower Rects that together form a
+/// Cuboid. The trait is parametrized over the type of Rect specifications it
+/// will return.
+pub trait CuboidSpecTrait<T>: Copy
+where
+    T: RectSpecTrait,
+{
+    /// Return a specification for creating either the upper or lower Rect forming the Cuboid.
+    fn to_rect_spec(&self, upper_or_lower: C1) -> Result<T, ScadDotsError>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +125,7 @@ impl CuboidAlign {
             .expect("got bad corners from CubeFace")
     }
 
-    pub fn center_solid() -> CuboidAlign {
+    pub fn centroid() -> CuboidAlign {
         CuboidAlign::midpoint(
             CuboidAlign::outside(C3::P000),
             CuboidAlign::outside(C3::P111),
@@ -220,15 +221,15 @@ impl From<CuboidAlign> for RectAlign {
 }
 
 impl Cuboid {
-    pub fn new<T>(
+    pub fn new<T, U>(
         shapes: CuboidShapes,
         spec: T,
     ) -> Result<Cuboid, ScadDotsError>
     where
-        T: CuboidSpec,
+        T: CuboidSpecTrait<U>,
+        U: RectSpecTrait,
     {
         // TODO check whether size is larger than any of the dimensions
-        let spec = spec.into_convertable()?;
         let bot = Rect::new(shapes.get(C1::P0), spec.to_rect_spec(C1::P0)?)?;
         let top = Rect::new(shapes.get(C1::P1), spec.to_rect_spec(C1::P1)?)?;
         Ok(Cuboid { bot: bot, top: top })
@@ -244,7 +245,7 @@ impl Cuboid {
             return Err(ScadDotsError::Args
                 .context("Cuboid can only be created from a cube-shaped dot"));
         }
-        let d = CuboidSpecBasic {
+        let d = CuboidSpec {
             pos: dot.p000,
             align: CuboidAlign::origin(),
             x_dim: dot.size,
@@ -420,10 +421,11 @@ impl Cuboid {
     }
 }
 
-impl CuboidSpecToRect for CuboidSpecBasic {
-    type R = RectSpecBasic;
-
-    fn to_rect_spec(&self, z_val: C1) -> Result<RectSpecBasic, ScadDotsError> {
+impl CuboidSpecTrait<RectSpec> for CuboidSpec {
+    fn to_rect_spec(
+        &self,
+        upper_or_lower: C1,
+    ) -> Result<RectSpec, ScadDotsError> {
         let dot_lengths = V3::new(self.size, self.size, self.size);
         let cuboid_lengths = V3::new(
             self.x_dim - self.size,
@@ -432,8 +434,8 @@ impl CuboidSpecToRect for CuboidSpecBasic {
         );
         let origin =
             self.pos - self.align.offset(cuboid_lengths, dot_lengths, self.rot);
-        let pos = origin + z_val.offset(cuboid_lengths.z, self.rot);
-        Ok(RectSpecBasic {
+        let pos = origin + upper_or_lower.offset(cuboid_lengths.z, self.rot);
+        Ok(RectSpec {
             pos: pos,
             align: RectAlign::origin(),
             y_dim: self.y_dim,
@@ -444,38 +446,37 @@ impl CuboidSpecToRect for CuboidSpecBasic {
     }
 }
 
-impl CuboidSpec for CuboidSpecBasic {
-    type C = CuboidSpecBasic;
-
-    fn into_convertable(self) -> Result<CuboidSpecBasic, ScadDotsError> {
-        Ok(self)
+impl From<CuboidSpecChamferZHole> for CuboidSpec {
+    fn from(spec: CuboidSpecChamferZHole) -> Self {
+        CuboidSpec {
+            pos: spec.pos,
+            align: spec.align,
+            x_dim: spec.x_dim,
+            y_dim: spec.y_dim,
+            z_dim: spec.z_dim,
+            size: spec.chamfer.unwrap() * spec.x_dim.min(spec.y_dim) / 2.,
+            rot: spec.rot,
+        }
     }
 }
 
-impl CuboidSpec for CuboidSpecChamferZHole {
-    type C = CuboidSpecBasic;
-
-    fn into_convertable(self) -> Result<CuboidSpecBasic, ScadDotsError> {
-        // TODO the dot size might be larger than the z dimension!
-        // This is ok if you only ever use it as a hole punched through a wall with thickness z.
-        // But bad if you try to do fancier things!
-        // TODO write fancier chamfer feature that does this right!
-        Ok(CuboidSpecBasic {
-            pos: self.pos,
-            align: self.align,
-            x_dim: self.x_dim,
-            y_dim: self.y_dim,
-            z_dim: self.z_dim,
-            size: self.chamfer.unwrap() * self.x_dim.min(self.y_dim) / 2.,
-            rot: self.rot,
-        })
+impl CuboidSpecTrait<RectSpec> for CuboidSpecChamferZHole {
+    fn to_rect_spec(
+        &self,
+        upper_or_lower: C1,
+    ) -> Result<RectSpec, ScadDotsError> {
+        // TODO this is a bit inefficient because we'll re-convert self to
+        // CuboidSpec every time this is called. But it makes the API a lot
+        // simpler than the old system with multiple traits.
+        let canonical_spec = CuboidSpec::from(*self);
+        canonical_spec.to_rect_spec(upper_or_lower)
     }
 }
 
 impl CuboidShapes {
-    pub fn get(&self, z_val: C1) -> RectShapes {
+    pub fn get(&self, upper_or_lower: C1) -> RectShapes {
         match *self {
-            CuboidShapes::Round => match z_val {
+            CuboidShapes::Round => match upper_or_lower {
                 C1::P1 => RectShapes::Sphere,
                 C1::P0 => RectShapes::Cylinder,
             },
@@ -488,7 +489,7 @@ impl CuboidShapes {
                 p101,
                 p011,
                 p111,
-            } => match z_val {
+            } => match upper_or_lower {
                 C1::P1 => RectShapes::Custom {
                     p00: p001,
                     p01: p011,

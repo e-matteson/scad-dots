@@ -19,7 +19,7 @@ impl Extrusion {
         let discard_z = |pos: P3| P2::new(pos.x, pos.y);
         let centers: Vec<_> = perimeter
             .iter()
-            .map(|dot| discard_z(dot.pos(DotAlign::center_solid())))
+            .map(|dot| discard_z(dot.pos(DotAlign::centroid())))
             .collect();
 
         Extrusion {

@@ -109,7 +109,7 @@ fn explode_radially() {
             Shape::Cylinder,
             DotSpec {
                 pos: P3::new(20., 20., 20.),
-                align: DotAlign::center_solid(),
+                align: DotAlign::centroid(),
                 size: 20.0,
                 rot: rot,
             },
@@ -132,7 +132,7 @@ fn explode_radially2() {
             Shape::Cube,
             DotSpec {
                 pos: P3::new(20., 20., 20.),
-                align: DotAlign::center_solid(),
+                align: DotAlign::centroid(),
                 size: 20.0,
                 rot: axis_degrees(x, 45.),
             },
@@ -150,7 +150,7 @@ fn mirror() {
     check_model("mirror", Action::Test, || {
         let r = Rect::new(
             RectShapes::Cube,
-            RectSpecBasic {
+            RectSpec {
                 pos: P3::origin(),
                 align: RectAlign::origin(),
                 y_dim: 10.0,
@@ -178,7 +178,7 @@ fn rect_cut_corners() {
     check_model("rect_cut_corners", Action::Test, || {
         let r = Rect::new(
             RectShapes::Cube,
-            RectSpecBasic {
+            RectSpec {
                 pos: P3::origin(),
                 align: RectAlign::origin(),
                 y_dim: 2.0,
@@ -230,7 +230,7 @@ fn map_cuboid() {
     check_model("map_cuboid", Action::Test, || {
         let p1 = Cuboid::new(
             CuboidShapes::Cube,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::origin(),
                 align: CuboidAlign::outside(C3::P111),
                 x_dim: 10.,
@@ -260,7 +260,7 @@ fn map_post() {
     check_model("map_post", Action::Test, || {
         let p1 = Post::new(
             PostShapes::Cube,
-            PostSpecRot {
+            PostSpec {
                 pos: P3::new(4., 0., 10.),
                 align: PostAlign::outside(C3::P111),
                 len: 12.,
@@ -288,7 +288,7 @@ fn map_rect() {
     check_model("map_rect", Action::Test, || {
         let r1 = Rect::new(
             RectShapes::Cube,
-            RectSpecBasic {
+            RectSpec {
                 pos: P3::origin(),
                 align: RectAlign::origin(),
                 x_dim: 10.,
@@ -335,7 +335,7 @@ fn cuboid_center_marks() {
     check_model("cuboid_center_marks", Action::Test, || {
         let cuboid = Cuboid::new(
             CuboidShapes::Cube,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::origin(),
                 align: CuboidAlign::origin(),
                 x_dim: 20.,
@@ -362,7 +362,7 @@ fn rect_center_marks() {
     check_model("rect_center_marks", Action::Test, || {
         let rect = Rect::new(
             RectShapes::Cube,
-            RectSpecBasic {
+            RectSpec {
                 pos: P3::origin(),
                 align: RectAlign::origin(),
                 x_dim: 20.,
@@ -503,7 +503,7 @@ fn simple_rect() {
     check_model("simple_rect", Action::Test, || {
         let r = Rect::new(
             RectShapes::Cube,
-            RectSpecBasic {
+            RectSpec {
                 pos: P3::origin(),
                 align: RectAlign::origin(),
                 y_dim: 5.0,
@@ -528,7 +528,7 @@ fn rect2() {
     check_model("rect2", Action::Test, || {
         let r = Rect::new(
             RectShapes::Cylinder,
-            RectSpecBasic {
+            RectSpec {
                 pos: P3::origin(),
                 align: RectAlign::origin(),
                 y_dim: 10.0,
@@ -579,13 +579,12 @@ fn simple_post() {
     check_model("simple_post", Action::Test, || {
         let p = Post::new(
             PostShapes::Cube,
-            PostSpecAxis {
+            PostSpec {
                 pos: P3::origin(),
                 align: PostAlign::origin(),
                 len: 10.,
-                axis: Axis::Z.into(),
+                rot: R3::identity(),
                 size: 3.0,
-                radians: 0.,
             },
         )?;
         Ok(p.link(PostLink::Solid))
@@ -597,17 +596,16 @@ fn post_old_align() {
     check_model("post_old_align", Action::Test, || {
         let p = Post::new(
             PostShapes::Round,
-            PostSpecAxis {
+            PostSpec {
                 pos: P3::origin(),
                 align: PostAlign::Corner {
                     post: C1::P0,
                     dot: C3::P111,
                 },
                 len: 6.,
-                axis: Axis::Z.into(),
+                rot: R3::identity(),
                 // top: P3::new(0.0, 0.0, 6.0),
                 size: 2.0,
-                radians: 0.,
             },
         )?;
         Ok(hull![p.bot, p.top])
@@ -619,7 +617,7 @@ fn simple_cuboid() {
     check_model("simple_cuboid", Action::Test, || {
         let p = Cuboid::new(
             CuboidShapes::Cube,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::origin(),
                 align: CuboidAlign::origin(),
                 y_dim: 15.0,
@@ -657,7 +655,7 @@ fn cuboid_frame() {
     check_model("cuboid_frame", Action::Test, || {
         let p = Cuboid::new(
             CuboidShapes::Cube,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::origin(),
                 align: CuboidAlign::origin(),
                 y_dim: 15.0,
@@ -676,7 +674,7 @@ fn cuboid_sides() {
     check_model("cuboid_sides", Action::Test, || {
         let p = Cuboid::new(
             CuboidShapes::Cube,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::origin(),
                 align: CuboidAlign::origin(),
                 y_dim: 15.0,
@@ -695,7 +693,7 @@ fn cuboid_open_bot() {
     check_model("cuboid_open_bot", Action::Test, || {
         let p = Cuboid::new(
             CuboidShapes::Round,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::origin(),
                 align: CuboidAlign::origin(),
                 y_dim: 15.0,
@@ -715,7 +713,7 @@ fn spiral_cuboid() {
     check_model("spiral_cuboid", Action::Test, || {
         let p = Cuboid::new(
             CuboidShapes::Cube,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::origin(),
                 align: CuboidAlign::origin(),
                 x_dim: 10.0,
@@ -771,7 +769,7 @@ fn cuboid_corners() {
     check_model("cuboid_corners", Action::Test, || {
         let r = Cuboid::new(
             CuboidShapes::Cube,
-            CuboidSpecBasic {
+            CuboidSpec {
                 pos: P3::new(4., 6., 8.),
                 align: CuboidAlign::Corner {
                     dot: C3::P100,
@@ -848,7 +846,7 @@ fn dot_fancy_translation2() {
             Shape::Cube,
             DotSpec {
                 pos: P3::new(0., 0., 0.),
-                align: DotAlign::center_solid(),
+                align: DotAlign::centroid(),
                 size: 1.0,
                 rot: rotation_between(Axis::X, V3::new(1., 1., 0.))?,
             },

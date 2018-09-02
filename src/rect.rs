@@ -18,7 +18,7 @@ pub struct Rect {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct RectSpecBasic {
+pub struct RectSpec {
     pub pos: P3,
     pub align: RectAlign,
     pub x_dim: f32,
@@ -63,18 +63,11 @@ pub enum RectLink {
     Chamfer,
 }
 
-// When you create a new way of specifying dimensions, you must EITHER:
-//  a) Impl RectSpecToDot (and have RectSpec just return itself)
-//  b) Impl RectSpec, turning itself into a different RectSpec type which has
-//      already implemented RectSpecToDot
-pub trait RectSpecToDot: RectSpec {
+/// Any struct implementing this trait can be used to construct a Rect, by
+/// providing specifications for each of the 4 dots that form the corners of the
+/// Rect.
+pub trait RectSpecTrait: Copy {
     fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, ScadDotsError>;
-}
-
-pub trait RectSpec: Copy + Sized {
-    type T: RectSpecToDot;
-    // TODO rename
-    fn into_convertable(self) -> Result<Self::T, ScadDotsError>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,9 +75,8 @@ pub trait RectSpec: Copy + Sized {
 impl Rect {
     pub fn new<T>(shapes: RectShapes, spec: T) -> Result<Rect, ScadDotsError>
     where
-        T: RectSpec,
+        T: RectSpecTrait,
     {
-        let spec = spec.into_convertable()?;
         // TODO check dimensions, ensure positive
         Ok(Rect {
             p00: Rect::make_dot(C2::P00, shapes, spec)?,
@@ -100,19 +92,10 @@ impl Rect {
         spec: T,
     ) -> Result<Dot, ScadDotsError>
     where
-        T: RectSpecToDot,
+        T: RectSpecTrait,
     {
         Ok(Dot::new(shapes.get(corner), spec.to_dot_spec(corner)?))
     }
-
-    // pub fn copy_translate(&self, offset: &V3) -> Rect {
-    //     Rect {
-    //         p00: self.p00.copy_translate(offset),
-    //         p01: self.p01.copy_translate(offset),
-    //         p11: self.p11.copy_translate(offset),
-    //         p10: self.p10.copy_translate(offset),
-    //     }
-    // }
 
     pub fn size(&self) -> f32 {
         self.p00.size
@@ -141,6 +124,7 @@ impl Rect {
         self.get_dot(rect).pos(dot)
     }
 
+    // Return a copy of 1 of the 4 corner dots.
     pub fn get_dot(&self, corner: C2) -> Dot {
         match corner {
             C2::P00 => self.p00,
@@ -150,6 +134,9 @@ impl Rect {
         }
     }
 
+    /// Return a vector describing the direction and length of 1 edge of the
+    /// Rect. The edge's axis is relative to the Rect's default orientation, not it's
+    /// actual rotated orientation.
     pub fn dim_vec(&self, axis: Axis) -> V3 {
         let point1 = self.pos(RectAlign::origin());
         let point2 = match axis {
@@ -160,10 +147,15 @@ impl Rect {
         point2 - point1
     }
 
+    /// Return a unit vector describing the direction of 1 edge of the Rect. The
+    /// edge's axis is relative to the Rect's default orientation, not it's
+    /// actual rotated orientation.
     pub fn dim_unit_vec(&self, axis: Axis) -> V3 {
         self.dim_vec(axis).normalize()
     }
 
+    /// Return the length of 1 edge of the Rect. The edge's axis is relative to
+    /// the Rect's default orientation, not it's actual rotated orientation.
     pub fn dim_len(&self, axis: Axis) -> f32 {
         self.dim_vec(axis).norm()
     }
@@ -172,6 +164,8 @@ impl Rect {
         drop_solid(&self.dots(), bottom_z, shape)
     }
 
+    /// For debugging. Return the union of 32 small spheres placed at each
+    /// corner of each Dot of the Rect.
     pub fn mark_corners(&self) -> Tree {
         // for debugging
         let mut marks = Vec::new();
@@ -235,7 +229,7 @@ impl Rect {
     }
 }
 
-impl RectSpecBasic {
+impl RectSpec {
     pub fn inner_y_dim(&self) -> f32 {
         self.y_dim - 2. * self.size
     }
@@ -245,7 +239,7 @@ impl RectSpecBasic {
     }
 
     pub fn with_pos(self, new_pos: P3) -> Self {
-        RectSpecBasic {
+        RectSpec {
             pos: new_pos,
             align: self.align,
             x_dim: self.x_dim,
@@ -255,7 +249,7 @@ impl RectSpecBasic {
         }
     }
     pub fn with_align(self, new_align: RectAlign) -> Self {
-        RectSpecBasic {
+        RectSpec {
             pos: self.pos,
             align: new_align,
             x_dim: self.x_dim,
@@ -265,7 +259,7 @@ impl RectSpecBasic {
         }
     }
     pub fn with_rot(self, new_rot: R3) -> Self {
-        RectSpecBasic {
+        RectSpec {
             pos: self.pos,
             align: self.align,
             x_dim: self.x_dim,
@@ -276,7 +270,7 @@ impl RectSpecBasic {
     }
 }
 
-impl RectSpecToDot for RectSpecBasic {
+impl RectSpecTrait for RectSpec {
     fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, ScadDotsError> {
         let dot_lengths = V3::new(self.size, self.size, self.size);
         let rect_lengths =
@@ -295,18 +289,13 @@ impl RectSpecToDot for RectSpecBasic {
     }
 }
 
-impl RectSpec for RectSpecBasic {
-    type T = RectSpecBasic;
-    fn into_convertable(self) -> Result<RectSpecBasic, ScadDotsError> {
-        Ok(self)
-    }
-}
-
 impl RectAlign {
+    /// Align to the Rect's origin, the outside P000 corner.
     pub fn origin() -> RectAlign {
         RectAlign::outside(C3::P000)
     }
 
+    // Align to the midpoint of the other 2 given alignment positions.
     pub fn midpoint(
         a: RectAlign,
         b: RectAlign,
@@ -333,13 +322,14 @@ impl RectAlign {
         }
     }
 
+    /// Align to the midpoint bteween the 2 outer corners of a `Rect`, a and b.
     pub fn outside_midpoint(a: C3, b: C3) -> RectAlign {
         RectAlign::midpoint(RectAlign::outside(a), RectAlign::outside(b))
             .expect("bug in outside_midpoint()")
     }
 
+    /// Align to the midpoint between the two inner corners of a `Rect`, a and b. "Inner corner" means, imagine a hollow rectangle made of 4 cubes, linked together to form a thick border. The empty space within the border is a like a box with 8 corners, each called inner corners.
     pub fn inside_midpoint(a: C3, b: C3) -> RectAlign {
-        // Return the midpoint between the two inner corners a and b
         RectAlign::midpoint(RectAlign::inside(a), RectAlign::inside(b))
             .expect("bug in inside_midpoint()")
     }
@@ -351,6 +341,7 @@ impl RectAlign {
         }
     }
 
+    /// Align to the given inner corner. "Inner corner" means, imagine a hollow rectangle made of 4 cube-shaped dots, linked together to form a thick border. The empty space within the border is a like a box with 8 corners, each called inner corners.
     pub fn inside(corner: C3) -> RectAlign {
         // TODO this is not quite analagous to CuboidAlign::inside(), because
         // it's on either the top of bottom surface. Does that matter? Should
@@ -361,20 +352,23 @@ impl RectAlign {
         }
     }
 
-    pub fn center_solid() -> RectAlign {
+    /// Align to the center-of-mass.
+    pub fn centroid() -> RectAlign {
         RectAlign::midpoint(
             RectAlign::outside(C3::P000),
             RectAlign::outside(C3::P111),
         ).expect("bad args to midpoint calculation")
     }
 
+    /// Align to the center of the given face of the Rect.
     pub fn center_face(face: CubeFace) -> RectAlign {
         let (a, b) = face.corners();
         RectAlign::midpoint(RectAlign::outside(a), RectAlign::outside(b))
             .expect("got bad corners from CubeFace")
     }
 
-    pub fn all_corners() -> Vec<RectAlign> {
+    /// Return all the corner alignments.
+    fn all_corners() -> Vec<RectAlign> {
         let mut v = Vec::new();
         for d in C3::all() {
             for r in C2::all_clockwise() {
