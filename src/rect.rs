@@ -7,8 +7,7 @@ use core::{
 };
 use cuboid::{Cuboid, CuboidLink};
 
-use errors::MidpointError;
-use failure::{Error, ResultExt};
+use errors::{ResultExt, ScadDotsError};
 
 #[derive(Debug, Clone, Copy, MinMaxCoord, MapDots)]
 pub struct Rect {
@@ -69,19 +68,19 @@ pub enum RectLink {
 //  b) Impl RectSpec, turning itself into a different RectSpec type which has
 //      already implemented RectSpecToDot
 pub trait RectSpecToDot: RectSpec {
-    fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, Error>;
+    fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, ScadDotsError>;
 }
 
 pub trait RectSpec: Copy + Sized {
     type T: RectSpecToDot;
     // TODO rename
-    fn into_convertable(self) -> Result<Self::T, Error>;
+    fn into_convertable(self) -> Result<Self::T, ScadDotsError>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Rect {
-    pub fn new<T>(shapes: RectShapes, spec: T) -> Result<Rect, Error>
+    pub fn new<T>(shapes: RectShapes, spec: T) -> Result<Rect, ScadDotsError>
     where
         T: RectSpec,
     {
@@ -99,7 +98,7 @@ impl Rect {
         corner: C2,
         shapes: RectShapes,
         spec: T,
-    ) -> Result<Dot, Error>
+    ) -> Result<Dot, ScadDotsError>
     where
         T: RectSpecToDot,
     {
@@ -182,7 +181,7 @@ impl Rect {
         Tree::union(marks)
     }
 
-    pub fn link(&self, style: RectLink) -> Result<Tree, Error> {
+    pub fn link(&self, style: RectLink) -> Result<Tree, ScadDotsError> {
         let dots = self.dots();
         Ok(match style {
             RectLink::Dots => Tree::union(dots),
@@ -203,7 +202,7 @@ impl Rect {
         })
     }
 
-    fn chamfer(&self) -> Result<Tree, Error> {
+    fn chamfer(&self) -> Result<Tree, ScadDotsError> {
         // This is probably a reasonable default size, but we might want to take it as an arg in RectLink::Chamfer
         let new_dot_size = self.p00.size / 100.;
         let new_dot_shape = Shape::Cube;
@@ -278,7 +277,7 @@ impl RectSpecBasic {
 }
 
 impl RectSpecToDot for RectSpecBasic {
-    fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, Error> {
+    fn to_dot_spec(&self, corner: C2) -> Result<DotSpec, ScadDotsError> {
         let dot_lengths = V3::new(self.size, self.size, self.size);
         let rect_lengths =
             V3::new(self.x_dim - self.size, self.y_dim - self.size, 0.);
@@ -298,7 +297,7 @@ impl RectSpecToDot for RectSpecBasic {
 
 impl RectSpec for RectSpecBasic {
     type T = RectSpecBasic;
-    fn into_convertable(self) -> Result<RectSpecBasic, Error> {
+    fn into_convertable(self) -> Result<RectSpecBasic, ScadDotsError> {
         Ok(self)
     }
 }
@@ -308,7 +307,10 @@ impl RectAlign {
         RectAlign::outside(C3::P000)
     }
 
-    pub fn midpoint(a: RectAlign, b: RectAlign) -> Result<RectAlign, Error> {
+    pub fn midpoint(
+        a: RectAlign,
+        b: RectAlign,
+    ) -> Result<RectAlign, ScadDotsError> {
         match (a, b) {
             (
                 RectAlign::Corner {
@@ -326,7 +328,7 @@ impl RectAlign {
                 dot_b: dot_b,
             }),
             _ => {
-                return Err(MidpointError.into());
+                return Err(ScadDotsError::Midpoint);
             }
         }
     }

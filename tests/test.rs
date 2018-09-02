@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate approx;
-extern crate failure;
 extern crate nalgebra;
 extern crate nom;
 

@@ -4,8 +4,8 @@ extern crate nalgebra;
 #[macro_use]
 extern crate nom;
 
-#[macro_use]
-extern crate failure;
+// #[macro_use]
+// extern crate failure;
 // extern crate failure_derive;
 // extern crate error_chain;
 

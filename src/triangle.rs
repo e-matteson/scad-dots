@@ -2,8 +2,7 @@ use core::utils::{
     axis_degrees, rotate, rotation_between, sin_deg, Axis, CubeFace, P3, R3, V3,
 };
 use core::{mark, Dot, DotAlign, DotSpec, MapDots, MinMaxCoord, Shape, Tree};
-
-use failure::Error;
+use errors::ScadDotsError;
 
 #[derive(Debug, Clone, Copy, MapDots, MinMaxCoord)]
 pub struct Triangle {
@@ -32,7 +31,7 @@ pub enum TriCorner {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Triangle {
-    pub fn new(spec: TriangleSpec) -> Result<Triangle, Error> {
+    pub fn new(spec: TriangleSpec) -> Result<Triangle, ScadDotsError> {
         let shape = Shape::Cylinder;
         let b_spec = DotSpec {
             pos: spec.center(TriCorner::B),
@@ -63,7 +62,7 @@ impl Triangle {
         Ok(Triangle { a: a, b: b, c: c })
     }
 
-    pub fn mark(&self, spec: TriangleSpec) -> Result<Tree, Error> {
+    pub fn mark(&self, spec: TriangleSpec) -> Result<Tree, ScadDotsError> {
         Ok(union![
             mark(spec.point(TriCorner::A), 1.),
             mark(spec.point(TriCorner::B), 1.),
@@ -71,7 +70,7 @@ impl Triangle {
         ])
     }
 
-    pub fn link(&self) -> Result<Tree, Error> {
+    pub fn link(&self) -> Result<Tree, ScadDotsError> {
         Ok(hull![self.a, self.b, self.c])
     }
 }
@@ -140,7 +139,7 @@ impl TriangleSpec {
         &self,
         c1: TriCorner,
         c2: TriCorner,
-    ) -> Result<R3, Error> {
+    ) -> Result<R3, ScadDotsError> {
         rotation_between(self.unit(Axis::X), self.unit_side(c1, c2))
     }
 

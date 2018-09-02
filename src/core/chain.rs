@@ -5,8 +5,7 @@ use core::utils::Axis;
 
 use core::tree::Tree;
 use core::Dot;
-use errors::{ChainError, SnakeError};
-use failure::Error;
+use errors::ScadDotsError;
 use std::collections::HashSet;
 
 /// Draw a taxicab path between two dots
@@ -21,9 +20,13 @@ pub enum SnakeLink {
 }
 
 impl Snake {
-    pub fn new(start: Dot, end: Dot, order: [Axis; 3]) -> Result<Snake, Error> {
+    pub fn new(
+        start: Dot,
+        end: Dot,
+        order: [Axis; 3],
+    ) -> Result<Snake, ScadDotsError> {
         if Snake::has_repeated_axes(&order) {
-            return Err(SnakeError.into());
+            return Err(ScadDotsError::Snake);
         }
         let mut dots = [Dot::default(); 4];
         dots[0] = start.to_owned();
@@ -41,7 +44,7 @@ impl Snake {
         set.len() != order.len()
     }
 
-    pub fn link(&self, style: SnakeLink) -> Result<Tree, Error> {
+    pub fn link(&self, style: SnakeLink) -> Result<Tree, ScadDotsError> {
         match style {
             SnakeLink::Chain => chain(&self.dots),
         }
@@ -49,7 +52,7 @@ impl Snake {
 }
 
 /// Store links between each subsequent pair of things
-pub fn chain<T>(things: &[T]) -> Result<Tree, Error>
+pub fn chain<T>(things: &[T]) -> Result<Tree, ScadDotsError>
 where
     T: Clone + Into<Tree>,
 {
@@ -60,7 +63,7 @@ where
     Ok(Tree::union(segments))
 }
 
-pub fn chain_loop<T>(things: &[T]) -> Result<Tree, Error>
+pub fn chain_loop<T>(things: &[T]) -> Result<Tree, ScadDotsError>
 where
     T: Clone + Into<Tree>,
 {
@@ -69,7 +72,7 @@ where
     chain(&circular)
 }
 
-fn chain_helper<T>(v: &[T]) -> Result<Vec<(T, T)>, Error>
+fn chain_helper<T>(v: &[T]) -> Result<Vec<(T, T)>, ScadDotsError>
 where
     T: Clone,
 {
@@ -78,7 +81,7 @@ where
     loop {
         let current = match i.next() {
             Some(n) => n.to_owned(),
-            None => return Err(ChainError.into()),
+            None => return Err(ScadDotsError::Chain),
         };
         let next = match i.peek() {
             Some(&n) => n.to_owned(),

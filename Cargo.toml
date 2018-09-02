@@ -8,12 +8,11 @@ authors = ["e-matteson <e.r.matteson@gmail.com>"]
 # scad-dots-derive = { path = "scad-dots-derive" }
 scad-dots-derive = { git = "https://github.com/e-matteson/scad-dots-derive.git" }
 scad_generator = {git = "https://github.com/TheZoq2/Rust-Scad.git"}
-nalgebra = "0.13.*"
-approx = "0.1.*"
-failure = "0.1.*"
-libc = "*"
+nalgebra = "0.13"
+approx = "0.1"
+libc = "0.2"
 
 [dependencies.nom]
 # TODO upgrade to 4.0 when out of alpha
-version = "3.2.*"
+version = "3.2"
 features = ["verbose-errors"]

@@ -7,7 +7,7 @@ use core::utils::{
 };
 
 use core::{Snake, Tree};
-use failure::Error;
+use errors::ScadDotsError;
 
 /// The smallest building block of the 3d model.
 #[derive(Debug, Clone, Copy)]
@@ -241,7 +241,7 @@ impl Dot {
     }
 
     /// Get the dot's axis of rotation.
-    pub fn rot_axis(&self) -> Result<V3, Error> {
+    pub fn rot_axis(&self) -> Result<V3, ScadDotsError> {
         unwrap_rot_axis(self.rot)
     }
 
@@ -272,7 +272,7 @@ impl Dot {
         &self,
         other: Dot,
         order: [Axis; 3],
-    ) -> Result<[Dot; 4], Error> {
+    ) -> Result<[Dot; 4], ScadDotsError> {
         Ok(Snake::new(*self, other, order)?.dots)
     }
 
@@ -282,7 +282,7 @@ impl Dot {
         axis: Option<V3>,
         count: usize,
         adjust_dot_rotations: bool,
-    ) -> Result<Vec<Dot>, Error> {
+    ) -> Result<Vec<Dot>, ScadDotsError> {
         let axis = axis.unwrap_or(rotate(self.rot, Axis::Z));
 
         let mut dots = Vec::new();

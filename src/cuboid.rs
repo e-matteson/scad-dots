@@ -3,8 +3,7 @@ use core::utils::{
     Fraction, P3, R3, V3,
 };
 use core::{mark, Dot, MapDots, MinMaxCoord, Shape, Tree};
-use errors::{ArgError, MidpointError};
-use failure::{Error, Fail};
+use errors::ScadDotsError;
 use post::{Post, PostLink};
 use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec, RectSpecBasic};
 
@@ -84,12 +83,12 @@ pub enum CuboidLink {
 pub trait CuboidSpec: Copy + Sized {
     type C: CuboidSpecToRect;
     // TODO rename
-    fn into_convertable(self) -> Result<Self::C, Error>;
+    fn into_convertable(self) -> Result<Self::C, ScadDotsError>;
 }
 
 pub trait CuboidSpecToRect: Copy {
     type R: RectSpec;
-    fn to_rect_spec(&self, z_val: C1) -> Result<Self::R, Error>;
+    fn to_rect_spec(&self, z_val: C1) -> Result<Self::R, ScadDotsError>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +147,7 @@ impl CuboidAlign {
     pub fn midpoint(
         a: CuboidAlign,
         b: CuboidAlign,
-    ) -> Result<CuboidAlign, Error> {
+    ) -> Result<CuboidAlign, ScadDotsError> {
         match (a, b) {
             (
                 CuboidAlign::Corner {
@@ -165,8 +164,7 @@ impl CuboidAlign {
                 cuboid_b: cuboid_b,
                 dot_b: dot_b,
             }),
-            _ => return Err(MidpointError.into()),
-            // _ => MidpointError,
+            _ => return Err(ScadDotsError::Midpoint),
         }
     }
 
@@ -222,7 +220,10 @@ impl From<CuboidAlign> for RectAlign {
 }
 
 impl Cuboid {
-    pub fn new<T>(shapes: CuboidShapes, spec: T) -> Result<Cuboid, Error>
+    pub fn new<T>(
+        shapes: CuboidShapes,
+        spec: T,
+    ) -> Result<Cuboid, ScadDotsError>
     where
         T: CuboidSpec,
     {
@@ -237,12 +238,11 @@ impl Cuboid {
         dot: Dot,
         size: f32,
         shape: Shape,
-    ) -> Result<Cuboid, Error> {
+    ) -> Result<Cuboid, ScadDotsError> {
         if let Shape::Cube = dot.shape {
         } else {
-            return Err(ArgError
-                .context("Cuboid can only be created from a cube-shaped dot")
-                .into());
+            return Err(ScadDotsError::Args
+                .context("Cuboid can only be created from a cube-shaped dot"));
         }
         let d = CuboidSpecBasic {
             pos: dot.p000,
@@ -378,7 +378,7 @@ impl Cuboid {
         Tree::union(marks)
     }
 
-    pub fn link(&self, style: CuboidLink) -> Result<Tree, Error> {
+    pub fn link(&self, style: CuboidLink) -> Result<Tree, ScadDotsError> {
         Ok(match style {
             CuboidLink::Solid => hull![
                 self.bot.link(RectLink::Solid)?,
@@ -423,7 +423,7 @@ impl Cuboid {
 impl CuboidSpecToRect for CuboidSpecBasic {
     type R = RectSpecBasic;
 
-    fn to_rect_spec(&self, z_val: C1) -> Result<RectSpecBasic, Error> {
+    fn to_rect_spec(&self, z_val: C1) -> Result<RectSpecBasic, ScadDotsError> {
         let dot_lengths = V3::new(self.size, self.size, self.size);
         let cuboid_lengths = V3::new(
             self.x_dim - self.size,
@@ -447,7 +447,7 @@ impl CuboidSpecToRect for CuboidSpecBasic {
 impl CuboidSpec for CuboidSpecBasic {
     type C = CuboidSpecBasic;
 
-    fn into_convertable(self) -> Result<CuboidSpecBasic, Error> {
+    fn into_convertable(self) -> Result<CuboidSpecBasic, ScadDotsError> {
         Ok(self)
     }
 }
@@ -455,7 +455,7 @@ impl CuboidSpec for CuboidSpecBasic {
 impl CuboidSpec for CuboidSpecChamferZHole {
     type C = CuboidSpecBasic;
 
-    fn into_convertable(self) -> Result<CuboidSpecBasic, Error> {
+    fn into_convertable(self) -> Result<CuboidSpecBasic, ScadDotsError> {
         // TODO the dot size might be larger than the z dimension!
         // This is ok if you only ever use it as a hole punched through a wall with thickness z.
         // But bad if you try to do fancier things!

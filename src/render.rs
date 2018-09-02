@@ -2,11 +2,13 @@ use scad_generator::*;
 
 use core::utils::{rotate, Corner3 as C3, P2, P3, V2, V3};
 use core::{Cylinder, Dot, Extrusion, Shape, Tree, TreeObject, TreeOperator};
-
-use failure::Error;
+use errors::{ResultExt, ScadDotsError};
 
 pub trait Render {
-    fn render(&self, options: RenderQuality) -> Result<ScadObject, Error>;
+    fn render(
+        &self,
+        options: RenderQuality,
+    ) -> Result<ScadObject, ScadDotsError>;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -31,7 +33,7 @@ pub fn to_file<T>(
     thing: &T,
     path: String,
     options: RenderQuality,
-) -> Result<(), Error>
+) -> Result<(), ScadDotsError>
 where
     T: Render,
 {
@@ -40,7 +42,10 @@ where
     Ok(())
 }
 
-pub fn to_code<T>(thing: &T, options: RenderQuality) -> Result<String, Error>
+pub fn to_code<T>(
+    thing: &T,
+    options: RenderQuality,
+) -> Result<String, ScadDotsError>
 where
     T: Render,
 {
@@ -51,14 +56,15 @@ where
 fn make_scad_file<T>(
     thing: &T,
     options: RenderQuality,
-) -> Result<ScadFile, Error>
+) -> Result<ScadFile, ScadDotsError>
 where
     T: Render,
 {
     let mut scad_file = ScadFile::new();
     // detail controls resolution of curves
     scad_file.set_detail(options.detail());
-    scad_file.add_object(thing.render(options)?);
+    scad_file
+        .add_object(thing.render(options).context("failed to render to scad")?);
     Ok(scad_file)
 }
 
@@ -89,7 +95,10 @@ impl TreeOperator {
 }
 
 impl Render for TreeObject {
-    fn render(&self, options: RenderQuality) -> Result<ScadObject, Error> {
+    fn render(
+        &self,
+        options: RenderQuality,
+    ) -> Result<ScadObject, ScadDotsError> {
         match self {
             TreeObject::Dot(ref dot) => dot.render(options),
             TreeObject::Cylinder(ref cylinder) => cylinder.render(options),
@@ -99,17 +108,27 @@ impl Render for TreeObject {
 }
 
 impl Render for TreeOperator {
-    fn render(&self, options: RenderQuality) -> Result<ScadObject, Error> {
+    fn render(
+        &self,
+        options: RenderQuality,
+    ) -> Result<ScadObject, ScadDotsError> {
         let mut operation = self.operation();
         for child in self.children() {
-            operation.add_child(child.render(options)?);
+            operation.add_child(
+                child
+                    .render(options)
+                    .context("failed to render child of operator")?,
+            );
         }
         Ok(operation)
     }
 }
 
 impl Render for Tree {
-    fn render(&self, options: RenderQuality) -> Result<ScadObject, Error> {
+    fn render(
+        &self,
+        options: RenderQuality,
+    ) -> Result<ScadObject, ScadDotsError> {
         match self {
             Tree::Object(ref object) => object.render(options),
             Tree::Operator(ref operator) => operator.render(options),
@@ -118,7 +137,10 @@ impl Render for Tree {
 }
 
 impl Render for Cylinder {
-    fn render(&self, _options: RenderQuality) -> Result<ScadObject, Error> {
+    fn render(
+        &self,
+        _options: RenderQuality,
+    ) -> Result<ScadObject, ScadDotsError> {
         let obj = scad!(
                 Translate(self.center_bot_pos_vec());{
                     scad!(
@@ -145,7 +167,10 @@ impl Cylinder {
 }
 
 impl Render for Dot {
-    fn render(&self, _options: RenderQuality) -> Result<ScadObject, Error> {
+    fn render(
+        &self,
+        _options: RenderQuality,
+    ) -> Result<ScadObject, ScadDotsError> {
         let obj = scad!(
             Translate(self.scad_translation());{
                 scad!(
@@ -202,7 +227,10 @@ impl Extrusion {
 }
 
 impl Render for Extrusion {
-    fn render(&self, _options: RenderQuality) -> Result<ScadObject, Error> {
+    fn render(
+        &self,
+        _options: RenderQuality,
+    ) -> Result<ScadObject, ScadDotsError> {
         // TODO update, add translation
         let points: Vec<V2> =
             self.perimeter.iter().map(|p| p - P2::origin()).collect();

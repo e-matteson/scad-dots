@@ -6,8 +6,7 @@ use core::{
     chain, chain_loop, Dot, DotSpec, MapDots, MinMaxCoord, Shape, Snake, Tree,
 };
 
-use errors::{DimensionError, MidpointError};
-use failure::{Error, Fail, ResultExt};
+use errors::{ResultExt, ScadDotsError};
 
 #[derive(Debug, Clone, Copy, MapDots, MinMaxCoord, Default)]
 pub struct Post {
@@ -75,13 +74,13 @@ pub enum PostSnakeLink {
 }
 
 pub trait PostSpecToDot: PostSpec {
-    fn to_dot_spec(&self, end: C1) -> Result<DotSpec, Error>;
+    fn to_dot_spec(&self, end: C1) -> Result<DotSpec, ScadDotsError>;
 }
 
 pub trait PostSpec: Copy + Sized {
     type T: PostSpecToDot;
     // TODO rename
-    fn into_convertable(self) -> Result<Self::T, Error>;
+    fn into_convertable(self) -> Result<Self::T, ScadDotsError>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +89,7 @@ impl Post {
     pub fn new<T: PostSpec>(
         shapes: PostShapes,
         spec: T,
-    ) -> Result<Post, Error> {
+    ) -> Result<Post, ScadDotsError> {
         let spec = spec.into_convertable()?;
         let bot = Dot::new(shapes.get(C1::P0), spec.to_dot_spec(C1::P0)?);
         let top = Dot::new(shapes.get(C1::P1), spec.to_dot_spec(C1::P1)?);
@@ -150,12 +149,11 @@ impl Post {
         self.top.size
     }
 
-    pub fn copy_raise_bot(&self, distance: f32) -> Result<Post, Error> {
+    pub fn copy_raise_bot(&self, distance: f32) -> Result<Post, ScadDotsError> {
         if distance > self.dim_len(Axis::Z) - self.top.size {
-            return Err(DimensionError
-                .context(
-                    "failed to copy_raise_bot, new post would be too short",
-                ).into());
+            return Err(ScadDotsError::Dimension.context(
+                "failed to copy_raise_bot, new post would be too short",
+            ));
         }
         let translation_vec = distance * self.dim_unit_vec(Axis::Z);
         Ok(Post {
@@ -179,7 +177,7 @@ impl Post {
         &self,
         other: Post,
         order: [Axis; 3],
-    ) -> Result<PostSnake, Error> {
+    ) -> Result<PostSnake, ScadDotsError> {
         let tops = Snake::new(self.top, other.top, order)?.dots;
         let bots = Snake::new(self.bot, other.bot, order)?.dots;
         let mut posts = [Post::default(); 4];
@@ -202,13 +200,13 @@ impl Post {
         Ok(PostSnake { posts: posts })
     }
 
-    pub fn chain(posts: &[Post]) -> Result<Tree, Error> {
+    pub fn chain(posts: &[Post]) -> Result<Tree, ScadDotsError> {
         let post_trees: Vec<_> =
             posts.into_iter().map(|p| p.link(PostLink::Solid)).collect();
         chain(&post_trees)
     }
 
-    pub fn chain_loop(posts: &[Post]) -> Result<Tree, Error> {
+    pub fn chain_loop(posts: &[Post]) -> Result<Tree, ScadDotsError> {
         let post_trees: Vec<_> =
             posts.into_iter().map(|p| p.link(PostLink::Solid)).collect();
         chain_loop(&post_trees)
@@ -223,7 +221,7 @@ impl Post {
 }
 
 impl PostSpecRot {
-    pub fn axis(&self) -> Result<V3, Error> {
+    pub fn axis(&self) -> Result<V3, ScadDotsError> {
         let v: V3 = C1::P1.into();
         Ok((self.rot * v).normalize())
     }
@@ -231,13 +229,13 @@ impl PostSpecRot {
 
 impl PostSpec for PostSpecRot {
     type T = PostSpecRot;
-    fn into_convertable(self) -> Result<PostSpecRot, Error> {
+    fn into_convertable(self) -> Result<PostSpecRot, ScadDotsError> {
         Ok(self)
     }
 }
 
 impl PostSpecToDot for PostSpecRot {
-    fn to_dot_spec(&self, end: C1) -> Result<DotSpec, Error> {
+    fn to_dot_spec(&self, end: C1) -> Result<DotSpec, ScadDotsError> {
         let origin =
             self.pos
                 - self.align.offset(self.size, self.len - self.size, self.rot);
@@ -254,7 +252,7 @@ impl PostSpecToDot for PostSpecRot {
 }
 
 impl PostSpecAxis {
-    pub fn rot(&self) -> Result<R3, Error> {
+    pub fn rot(&self) -> Result<R3, ScadDotsError> {
         // TODO rotations don't seem quite right, when they're off an x/y/z axis
         // Posts lie on z axis by default!
         let post_axis = self.axis;
@@ -272,7 +270,7 @@ impl PostSpecAxis {
 
 impl PostSpec for PostSpecAxis {
     type T = PostSpecRot;
-    fn into_convertable(self) -> Result<PostSpecRot, Error> {
+    fn into_convertable(self) -> Result<PostSpecRot, ScadDotsError> {
         Ok(PostSpecRot {
             pos: self.pos,
             align: self.align,
@@ -301,7 +299,10 @@ impl PostAlign {
             .expect("bug in outside_midpoint()")
     }
 
-    pub fn midpoint(a: PostAlign, b: PostAlign) -> Result<PostAlign, Error> {
+    pub fn midpoint(
+        a: PostAlign,
+        b: PostAlign,
+    ) -> Result<PostAlign, ScadDotsError> {
         match (a, b) {
             (
                 PostAlign::Corner {
@@ -318,7 +319,7 @@ impl PostAlign {
                 post_b: post_b,
                 dot_b: dot_b,
             }),
-            _ => return Err(MidpointError.into()),
+            _ => return Err(ScadDotsError::Midpoint),
         }
     }
 
@@ -392,7 +393,7 @@ impl PostSnake {
         }
     }
 
-    pub fn link(&self, style: PostSnakeLink) -> Result<Tree, Error> {
+    pub fn link(&self, style: PostSnakeLink) -> Result<Tree, ScadDotsError> {
         match style {
             PostSnakeLink::Chain => Post::chain(&self.posts),
             PostSnakeLink::Posts => {

@@ -1,5 +1,3 @@
-use failure::{Error, ResultExt};
-
 use std::fs::File;
 use std::io::{self, BufReader, Read, Write};
 use std::os::unix::process::CommandExt;
@@ -9,7 +7,7 @@ use std::process::Command;
 use libc;
 
 use core::Tree;
-use errors::{panic_error, TestError};
+use errors::{ResultExt, ScadDotsError};
 use render::{to_code, RenderQuality};
 
 use parse::scad_relative_eq;
@@ -39,7 +37,7 @@ enum GoodOrBad {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn preview_model(tree: &Tree) -> Result<(), Error> {
+pub fn preview_model(tree: &Tree) -> Result<(), ScadDotsError> {
     let scad = render_model(tree, RenderQuality::Low)?;
     let path = save_temp_file("preview", "", &scad)?;
     view_in_openscad(&[path])
@@ -47,17 +45,18 @@ pub fn preview_model(tree: &Tree) -> Result<(), Error> {
 
 pub fn check_model<F>(name: &str, action: Action, f: F)
 where
-    F: Fn() -> Result<Tree, Error>,
+    F: Fn() -> Result<Tree, ScadDotsError>,
 {
     if let Err(e) = test_helper(name, action, &f) {
-        panic_error(e);
+        println!("error: {}", e);
+        panic!("returned error")
     }
 }
 
 // TODO let lib user control paths, somehow
-fn test_helper<F>(name: &str, action: Action, f: F) -> Result<(), Error>
+fn test_helper<F>(name: &str, action: Action, f: F) -> Result<(), ScadDotsError>
 where
-    F: Fn() -> Result<Tree, Error>,
+    F: Fn() -> Result<Tree, ScadDotsError>,
 {
     let tree = f()?;
     match action {
@@ -79,7 +78,7 @@ where
                 paths.push(save_temp_file("expected", name, &expected)?);
             }
             view_in_openscad(&paths)?;
-            return Err(TestError::ViewBoth.into());
+            return Err(ScadDotsError::TestView);
         }
         Action::Preview => {
             let actual = render_model(&tree, RenderQuality::Low)?;
@@ -96,11 +95,12 @@ where
         Action::Create => {
             let actual = render_model(&tree, RenderQuality::Low)?;
             save_file(&name_to_path(name, GoodOrBad::Good), &actual)?;
-            return Err(TestError::Create.into());
+            return Err(ScadDotsError::TestCreate);
         }
         Action::Test => {
             let actual = render_model(&tree, RenderQuality::Low)?;
-            let expected = load_model(name)?;
+            let expected = load_model(name)
+                .context("failed to load the expected model")?;
             if !scad_relative_eq(&actual, &expected, MAX_RELATIVE)? {
                 save_incorrect(name, &actual)?;
                 panic!("Models don't match")
@@ -120,7 +120,7 @@ fn change_process_group() -> Result<(), io::Error> {
     }
 }
 
-fn view_in_openscad(paths: &[String]) -> Result<(), Error> {
+fn view_in_openscad(paths: &[String]) -> Result<(), ScadDotsError> {
     //  TODO only do before_exec for linux
     // https://doc.rust-lang.org/reference/attributes.html#conditional-compilation
     Command::new("openscad")
@@ -131,22 +131,24 @@ fn view_in_openscad(paths: &[String]) -> Result<(), Error> {
     Ok(())
 }
 
-fn load_model(name: &str) -> Result<String, Error> {
-    let file = File::open(name_to_path(name, GoodOrBad::Good))?;
+fn load_model(name: &str) -> Result<String, ScadDotsError> {
+    let file = File::open(name_to_path(name, GoodOrBad::Good))
+        .context("failed to open openscad file")?;
     let mut buf = BufReader::new(file);
     let mut s = String::new();
-    buf.read_to_string(&mut s)?;
+    buf.read_to_string(&mut s)
+        .context("failed to read openscad file")?;
     Ok(s)
 }
 
 fn render_model(
     tree: &Tree,
     render_options: RenderQuality,
-) -> Result<String, Error> {
+) -> Result<String, ScadDotsError> {
     to_code(tree, render_options)
 }
 
-fn save_file(path: &str, data: &str) -> Result<(), Error> {
+fn save_file(path: &str, data: &str) -> Result<(), ScadDotsError> {
     println!("Writing to: {}", path);
     let mut f = File::create(path)?;
     f.write_all(data.as_bytes())?;
@@ -157,13 +159,13 @@ fn save_temp_file(
     id: &str,
     test_name: &str,
     code: &str,
-) -> Result<(String), Error> {
+) -> Result<(String), ScadDotsError> {
     let path = format!("tests/tmp/{}_{}.scad", id, test_name);
     save_file(&path, code).context("failed to save temporary .scad file")?;
     Ok(path)
 }
 
-fn save_incorrect(name: &str, code: &str) -> Result<(), Error> {
+fn save_incorrect(name: &str, code: &str) -> Result<(), ScadDotsError> {
     let path = name_to_path(name, GoodOrBad::Bad);
     println!("Saving incorrect model as: '{}'", path);
     println!(

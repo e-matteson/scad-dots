@@ -5,8 +5,7 @@ use nalgebra::{
 use std::f32;
 use std::f32::consts::PI;
 
-pub use errors::{ArgError, RatioError, RotationError};
-use failure::{Error, Fail};
+use errors::ScadDotsError;
 
 pub type P3 = Point3<f32>;
 pub type P2 = Point2<f32>;
@@ -206,13 +205,13 @@ impl Corner2 {
         vec![Corner2::P00, Corner2::P01, Corner2::P11, Corner2::P10]
     }
 
-    pub fn is_high(&self, axis: Axis) -> Result<bool, Error> {
+    pub fn is_high(&self, axis: Axis) -> Result<bool, ScadDotsError> {
         let bools = self.to_bools();
         Ok(match axis {
             Axis::X => bools.0,
             Axis::Y => bools.1,
             Axis::Z => {
-                return Err(ArgError
+                return Err(ScadDotsError::Args
                     .context("The Z value of a Corner2 is not defined")
                     .into())
             }
@@ -425,10 +424,9 @@ impl CubeFace {
 }
 
 impl Fraction {
-    pub fn new(value: f32) -> Result<Fraction, Error> {
+    pub fn new(value: f32) -> Result<Fraction, ScadDotsError> {
         if value < 0. || value > 1. {
-            return Err(RatioError(value).into());
-            // bail!("invalid ratio: {}", value);
+            return Err(ScadDotsError::Ratio(value));
         }
         Ok(Fraction(value))
     }
@@ -461,7 +459,10 @@ where
     rot * v
 }
 
-pub fn degrees_between(vector_a: V3, vector_b: V3) -> Result<f32, Error> {
+pub fn degrees_between(
+    vector_a: V3,
+    vector_b: V3,
+) -> Result<f32, ScadDotsError> {
     Ok(radians_to_degrees(
         rotation_between(vector_a, vector_b)?.angle(),
     ))
@@ -494,7 +495,7 @@ where
     )
 }
 
-pub fn rotation_between<T, U>(a: T, b: U) -> Result<R3, Error>
+pub fn rotation_between<T, U>(a: T, b: U) -> Result<R3, ScadDotsError>
 where
     T: Into<V3>,
     U: Into<V3>,
@@ -503,10 +504,8 @@ where
     let a: V3 = a.into();
     let b: V3 = b.into();
     R3::rotation_between(&a, &b).ok_or_else(|| {
-        let err: Error = RotationError
+        ScadDotsError::Rotation
             .context("failed to get rotation between vectors")
-            .into();
-        err
     })
 }
 
@@ -583,7 +582,11 @@ pub fn relative_less(a: f32, b: f32) -> bool {
     a < b && !relative_eq!(a, b, max_relative = MAX_REL)
 }
 
-pub fn radial_offset(radians: f32, radius: f32, axis: V3) -> Result<V3, Error> {
+pub fn radial_offset(
+    radians: f32,
+    radius: f32,
+    axis: V3,
+) -> Result<V3, ScadDotsError> {
     let radius_vec = V3::new(radius, 0., 0.);
     // let radians = circle_fraction * 2. * PI;
     let rot_around_z = axis_radians(Axis::Z, radians);
@@ -591,13 +594,13 @@ pub fn radial_offset(radians: f32, radius: f32, axis: V3) -> Result<V3, Error> {
     Ok(z_to_real_axis * rot_around_z * radius_vec)
 }
 
-pub(crate) fn unwrap_rot_axis(rot: R3) -> Result<V3, Error> {
+pub(crate) fn unwrap_rot_axis(rot: R3) -> Result<V3, ScadDotsError> {
     match rot.axis() {
         Some(unit) => Ok(unit.unwrap()),
         None => {
             if rot.angle() != 0.0 {
-                // TODO approx equal
-                return Err(RotationError.into());
+                // TODO approx equal?
+                return Err(ScadDotsError::Rotation);
             }
             // Shouldn't matter what axis we use here, since the angle is 0
             Ok(Axis::Z.into())

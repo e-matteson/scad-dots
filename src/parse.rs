@@ -1,11 +1,14 @@
 use std;
 
 use approx::ApproxEq;
-use errors::ParseError;
-use failure::Error;
+use errors::ScadDotsError;
 use nom::{digit, float};
 
-pub fn scad_relative_eq(a: &str, b: &str, max_rel: f32) -> Result<bool, Error> {
+pub fn scad_relative_eq(
+    a: &str,
+    b: &str,
+    max_rel: f32,
+) -> Result<bool, ScadDotsError> {
     Ok(relative_eq!(
         parse_scad(a)?,
         parse_scad(b)?,
@@ -13,13 +16,12 @@ pub fn scad_relative_eq(a: &str, b: &str, max_rel: f32) -> Result<bool, Error> {
     ))
 }
 
-fn parse_scad(scad: &str) -> Result<ScadThing, Error> {
+fn parse_scad(scad: &str) -> Result<ScadThing, ScadDotsError> {
     let out = parser(scad.as_bytes());
     if out.is_done() {
-        let thing = out.unwrap().1;
-        return Ok(thing);
+        return Ok(out.unwrap().1);
     }
-    return Err(ParseError.into());
+    return Err(ScadDotsError::Parse);
 }
 
 type Double = (f32, f32);

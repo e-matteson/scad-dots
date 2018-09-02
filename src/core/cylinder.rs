@@ -1,10 +1,10 @@
 use core::{Tree, TreeObject};
+use errors::ScadDotsError;
 
 use core::utils::{
     radians_to_degrees, unwrap_rot_axis, Axis, Corner1 as C1, P3, R3, V3,
 };
 
-use failure::Error;
 // Cylinders have only basic support, without all the nice features of Dots.
 // They should only be used for making discs that are shorter than their
 // diameter.
@@ -50,7 +50,7 @@ impl Cylinder {
     /// TODO what is this exactly? It's not the actual vector along the axis
     /// of the cylinder, apparently. It works for rendering, but it's
     /// misleading for users.
-    pub fn rot_axis_for_rendering(&self) -> Result<V3, Error> {
+    pub fn rot_axis_for_rendering(&self) -> Result<V3, ScadDotsError> {
         unwrap_rot_axis(self.rot)
     }
 
