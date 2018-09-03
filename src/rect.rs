@@ -289,8 +289,9 @@ impl RectSpecTrait for RectSpec {
             align: C3::P000.into(),
             rot: self.rot,
             size: self.size,
+            shape: self.shapes.get(corner),
         };
-        Ok(Dot::new(self.shapes.get(corner), spec))
+        Ok(Dot::new(spec))
     }
 }
 

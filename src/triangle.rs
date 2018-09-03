@@ -38,24 +38,27 @@ impl Triangle {
             align: DotAlign::center_face(CubeFace::Z0),
             size: spec.size,
             rot: spec.rot,
+            shape,
         };
-        let b = Dot::new(shape, b_spec);
+        let b = Dot::new(b_spec);
         let a_spec = DotSpec {
             pos: spec.center(TriCorner::A),
             align: DotAlign::center_face(CubeFace::Z0),
             size: spec.size,
             rot: spec.rot,
+            shape,
         };
 
-        let a = Dot::new(shape, a_spec);
+        let a = Dot::new(a_spec);
 
         let c_spec = DotSpec {
             pos: spec.center(TriCorner::C),
             align: DotAlign::center_face(CubeFace::Z0),
             size: spec.size,
             rot: spec.rot,
+            shape,
         };
-        let c = Dot::new(shape, c_spec);
+        let c = Dot::new(c_spec);
 
         // print!("ca: {}, ab: {}", spec.len(TriCorner::C), spec.len_ab());
 

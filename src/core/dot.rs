@@ -24,6 +24,7 @@ pub struct DotSpec {
     pub align: DotAlign,
     pub size: f32,
     pub rot: R3,
+    pub shape: Shape,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -40,8 +41,11 @@ pub enum Shape {
     Cylinder,
 }
 
+/// This trait lets you apply a closure to every Dot within a struct.
+/// It provides methods for common map operations like translating every Dot by a fixed offset.
+/// It can be derived using scad-dots-derive crate.
 pub trait MapDots: Sized {
-    // Can be derived using pipit-3d-derive crate
+    // Can be derived using scad-dots-derive crate
     fn map(&self, f: &Fn(&Dot) -> Dot) -> Self;
 
     fn map_translate(&self, offset: V3) -> Self {
@@ -56,8 +60,10 @@ pub trait MapDots: Sized {
         self.map(&|d: &Dot| d.rotate(rot))
     }
 }
+
+/// This provides methods that involve recursively checking all the coordinates within a struct.
+/// It can be derived using scad-dots-derive crate.
 pub trait MinMaxCoord {
-    // Can be derived using pipit-3d-derive crate
     fn all_coords(&self, axis: Axis) -> Vec<f32>;
 
     fn max_coord(&self, axis: Axis) -> f32 {
@@ -110,9 +116,9 @@ pub trait MinMaxCoord {
 
 impl Dot {
     /// Create a new dot.
-    pub fn new(shape: Shape, spec: DotSpec) -> Dot {
+    pub fn new(spec: DotSpec) -> Dot {
         Dot {
-            shape: shape,
+            shape: spec.shape,
             p000: spec.origin(),
             size: spec.size,
             rot: spec.rot,
@@ -151,15 +157,13 @@ impl Dot {
 
         // Create a Dot whose bottom face is centered on that position.
         // Reset its rotation.
-        Dot::new(
-            shape.unwrap_or(self.shape),
-            DotSpec {
-                pos: pos,
-                align: DotAlign::center_face(CubeFace::Z0),
-                size: self.size,
-                rot: R3::identity(),
-            },
-        )
+        Dot::new(DotSpec {
+            pos: pos,
+            align: DotAlign::center_face(CubeFace::Z0),
+            size: self.size,
+            rot: R3::identity(),
+            shape: shape.unwrap_or(self.shape),
+        })
     }
 
     pub fn translate(&self, offset: V3) -> Dot {
@@ -193,8 +197,9 @@ impl Dot {
             align: align,
             size: self.size,
             rot: self.rot,
+            shape: self.shape,
         };
-        Dot::new(self.shape, spec)
+        Dot::new(spec)
     }
 
     /// Translate the dot along the given direction vector, until the part of
@@ -218,8 +223,9 @@ impl Dot {
             align: align.into(),
             size: self.size,
             rot: self.rot,
+            shape: self.shape,
         };
-        Dot::new(self.shape, spec)
+        Dot::new(spec)
     }
 
     pub fn with_coord(&self, coordinate: f32, dimension: Axis) -> Dot {
@@ -296,15 +302,13 @@ impl Dot {
                 self.rot
             };
 
-            let new = Dot::new(
-                self.shape,
-                DotSpec {
-                    pos: self.pos(DotAlign::centroid()) + offset,
-                    align: DotAlign::centroid(),
-                    size: self.size,
-                    rot: rot,
-                },
-            );
+            let new = Dot::new(DotSpec {
+                pos: self.pos(DotAlign::centroid()) + offset,
+                align: DotAlign::centroid(),
+                size: self.size,
+                rot: rot,
+                shape: self.shape,
+            });
 
             dots.push(new)
         }
@@ -312,24 +316,56 @@ impl Dot {
     }
 }
 
-//  TODO impl default for dotspec and shape, derive for dot
+// //  TODO impl default for dotspec and shape, derive for dot
+// impl Default for DotSpec{
+//     fn default() -> DotSpec {
+//     }
+// }
 impl Default for Dot {
     fn default() -> Dot {
-        Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::origin(),
-                align: DotAlign::Corner(C3::P000),
-                size: 1.,
-                rot: R3::identity(),
-            },
-        )
+        Dot::new(DotSpec {
+            pos: P3::origin(),
+            align: DotAlign::Corner(C3::P000),
+            size: 1.,
+            rot: R3::identity(),
+            shape: Shape::Cube,
+        })
     }
 }
 
 impl DotSpec {
     pub fn origin(&self) -> P3 {
         self.pos - self.align.offset(self.size, self.rot)
+    }
+
+    pub fn with_pos(self, new_value: P3) -> Self {
+        let mut new = self;
+        new.pos = new_value;
+        new
+    }
+
+    pub fn with_align(self, new_value: DotAlign) -> Self {
+        let mut new = self;
+        new.align = new_value;
+        new
+    }
+
+    pub fn with_rot(self, new_value: R3) -> Self {
+        let mut new = self;
+        new.rot = new_value;
+        new
+    }
+
+    pub fn with_size(self, new_value: f32) -> Self {
+        let mut new = self;
+        new.size = new_value;
+        new
+    }
+
+    pub fn with_shape(self, new_value: Shape) -> Self {
+        let mut new = self;
+        new.shape = new_value;
+        new
     }
 }
 
@@ -467,13 +503,11 @@ where
 pub fn mark(pos: P3, size: f32) -> Tree {
     // Put a little sphere at the given position, for debugging
     // TODO make it red
-    Dot::new(
-        Shape::Sphere,
-        DotSpec {
-            pos: pos,
-            align: DotAlign::centroid(),
-            size: size,
-            rot: R3::identity(),
-        },
-    ).into()
+    Dot::new(DotSpec {
+        pos: pos,
+        align: DotAlign::centroid(),
+        size: size,
+        rot: R3::identity(),
+        shape: Shape::Sphere,
+    }).into()
 }

@@ -209,8 +209,9 @@ impl PostSpecTrait for PostSpec {
             align: C3::P000.into(),
             size: self.size,
             rot: self.rot,
+            shape: self.shapes.get(upper_or_lower),
         };
-        Ok(Dot::new(self.shapes.get(upper_or_lower), spec))
+        Ok(Dot::new(spec))
     }
 }
 
