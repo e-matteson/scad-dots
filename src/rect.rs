@@ -2,7 +2,7 @@ use core::utils::{
     midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3,
 };
 use core::{
-    chain_loop, drop_solid, mark, Dot, DotSpec, MapDots, MinMaxCoord, Shape,
+    chain_loop, drop_solid, mark, Dot, DotShape, DotSpec, MapDots, MinMaxCoord,
     Tree,
 };
 use cuboid::{Cuboid, CuboidLink};
@@ -48,10 +48,10 @@ pub enum RectShapes {
     Sphere,
     Cylinder,
     Custom {
-        p00: Shape,
-        p10: Shape,
-        p11: Shape,
-        p01: Shape,
+        p00: DotShape,
+        p10: DotShape,
+        p11: DotShape,
+        p01: DotShape,
     },
 }
 
@@ -145,7 +145,7 @@ impl Rect {
         self.edge(axis).norm()
     }
 
-    pub fn drop_solid(&self, bottom_z: f32, shape: Option<Shape>) -> Tree {
+    pub fn drop_solid(&self, bottom_z: f32, shape: Option<DotShape>) -> Tree {
         drop_solid(&self.dots(), bottom_z, shape)
     }
 
@@ -184,7 +184,7 @@ impl Rect {
     fn chamfer(&self) -> Result<Tree, ScadDotsError> {
         // This is probably a reasonable default size, but we might want to take it as an arg in RectLink::Chamfer
         let new_dot_size = self.p00.size / 100.;
-        let new_dot_shape = Shape::Cube;
+        let new_dot_shape = DotShape::Cube;
 
         let p00 = Cuboid::from_dot(self.p00, new_dot_size, new_dot_shape)?;
         let p01 = Cuboid::from_dot(self.p01, new_dot_size, new_dot_shape)?;
@@ -402,7 +402,7 @@ impl RectAlign {
 }
 
 impl RectShapes {
-    pub fn get(&self, corner: C2) -> Shape {
+    pub fn get(&self, corner: C2) -> DotShape {
         match *self {
             RectShapes::Custom { p00, p10, p11, p01 } => match corner {
                 C2::P00 => p00,
@@ -410,19 +410,19 @@ impl RectShapes {
                 C2::P10 => p10,
                 C2::P11 => p11,
             },
-            RectShapes::Cube => Shape::Cube,
-            RectShapes::Sphere => Shape::Sphere,
-            RectShapes::Cylinder => Shape::Cylinder,
+            RectShapes::Cube => DotShape::Cube,
+            RectShapes::Sphere => DotShape::Sphere,
+            RectShapes::Cylinder => DotShape::Cylinder,
         }
     }
 }
 
-impl From<Shape> for RectShapes {
-    fn from(shape: Shape) -> Self {
+impl From<DotShape> for RectShapes {
+    fn from(shape: DotShape) -> Self {
         match shape {
-            Shape::Cube => RectShapes::Cube,
-            Shape::Cylinder => RectShapes::Cylinder,
-            Shape::Sphere => RectShapes::Sphere,
+            DotShape::Cube => RectShapes::Cube,
+            DotShape::Cylinder => RectShapes::Cylinder,
+            DotShape::Sphere => RectShapes::Sphere,
         }
     }
 }

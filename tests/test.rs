@@ -105,15 +105,13 @@ fn explode_radially() {
         let y: V3 = Axis::Y.into();
         // let z: V3 = Axis::Z.into();
         let rot = axis_degrees(y, 45.) * axis_degrees(x, 45.);
-        let dot = Dot::new(
-            Shape::Cylinder,
-            DotSpec {
-                pos: P3::new(20., 20., 20.),
-                align: DotAlign::centroid(),
-                size: 20.0,
-                rot: rot,
-            },
-        );
+        let dot = Dot::new(DotSpec {
+            pos: P3::new(20., 20., 20.),
+            align: DotAlign::centroid(),
+            size: 20.0,
+            rot: rot,
+            shape: DotShape::Cylinder,
+        });
 
         Ok(union![
             Tree::union(dot.explode_radially(30., None, 5, true)?),
@@ -128,15 +126,13 @@ fn explode_radially2() {
     check_model("explode_radially2", Action::Test, || {
         let x: V3 = Axis::X.into();
         let y: V3 = Axis::Y.into();
-        let dot = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::new(20., 20., 20.),
-                align: DotAlign::centroid(),
-                size: 20.0,
-                rot: axis_degrees(x, 45.),
-            },
-        );
+        let dot = Dot::new(DotSpec {
+            pos: P3::new(20., 20., 20.),
+            align: DotAlign::centroid(),
+            size: 20.0,
+            rot: axis_degrees(x, 45.),
+            shape: DotShape::Cube,
+        });
         let axis = y;
         Ok(union![
             Tree::union(dot.explode_radially(30., Some(axis), 5, false)?),
@@ -233,7 +229,7 @@ fn map_cuboid() {
             z_length: 4.,
             size: 1.,
             rot: R3::identity(),
-            shapes: Shape::Cube.into(),
+            shapes: DotShape::Cube.into(),
         })?;
         let p2 = p1.map_translate(V3::new(0., -10., 0.));
         let p3 = p1.map_rotate(axis_radians(Axis::Z, -PI / 8.));
@@ -286,7 +282,7 @@ fn map_rect() {
             y_length: 5.,
             size: 2.,
             rot: axis_radians(Axis::X, PI / 4.),
-            shapes: Shape::Cube.into(),
+            shapes: DotShape::Cube.into(),
         })?;
         let r2 = r1.map_translate(V3::new(3., 0., 5.));
         let r3 = r1.map_rotate(axis_radians(V3::new(1., 1., 0.), PI / 2.));
@@ -373,15 +369,13 @@ fn rect_center_marks() {
 #[test]
 fn dot_center_marks() {
     check_model("dot_center_marks", Action::Test, || {
-        let dot = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::origin(),
-                align: DotAlign::origin(),
-                size: 20.0,
-                rot: R3::identity(),
-            },
-        );
+        let dot = Dot::new(DotSpec {
+            pos: P3::origin(),
+            align: DotAlign::origin(),
+            size: 20.0,
+            rot: R3::identity(),
+            shape: DotShape::Cube,
+        });
         Ok(union![
             dot,
             mark(dot.pos(DotAlign::center_face(CubeFace::X0)), 1.),
@@ -397,17 +391,15 @@ fn dot_center_marks() {
 #[test]
 fn cuboid_from_dot() {
     check_model("cuboid_from_dot", Action::Test, || {
-        let dot = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::new(1., 2., 3.),
-                align: C3::P110.into(),
-                size: 3.0,
-                rot: axis_radians(V3::new(1., 2., 3.), PI / 3.),
-            },
-        );
+        let dot = Dot::new(DotSpec {
+            pos: P3::new(1., 2., 3.),
+            align: C3::P110.into(),
+            size: 3.0,
+            rot: axis_radians(V3::new(1., 2., 3.), PI / 3.),
+            shape: DotShape::Cube,
+        });
 
-        let c = Cuboid::from_dot(dot, 0.5, Shape::Cube)?;
+        let c = Cuboid::from_dot(dot, 0.5, DotShape::Cube)?;
 
         for corner in C3::all() {
             assert_relative_eq!(
@@ -423,15 +415,13 @@ fn cuboid_from_dot() {
 #[test]
 fn simple_dot() {
     check_model("simple_dot", Action::Test, || {
-        let n = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::new(0., 0., 0.),
-                align: C3::P000.into(),
-                size: 2.0,
-                rot: R3::identity(),
-            },
-        );
+        let n = Dot::new(DotSpec {
+            pos: P3::new(0., 0., 0.),
+            align: C3::P000.into(),
+            size: 2.0,
+            rot: R3::identity(),
+            shape: DotShape::Cube,
+        });
         Ok(n.into())
     })
 }
@@ -439,15 +429,13 @@ fn simple_dot() {
 #[test]
 fn dot_rot() {
     check_model("dot_rot", Action::Test, || {
-        let n = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::new(0., 0., 0.),
-                align: C3::P111.into(),
-                size: 2.0,
-                rot: axis_radians(V3::new(1., 1., 0.), PI / 2.),
-            },
-        );
+        let n = Dot::new(DotSpec {
+            pos: P3::new(0., 0., 0.),
+            align: C3::P111.into(),
+            size: 2.0,
+            rot: axis_radians(V3::new(1., 1., 0.), PI / 2.),
+            shape: DotShape::Cube,
+        });
         Ok(n.into())
     })
 }
@@ -455,15 +443,13 @@ fn dot_rot() {
 #[test]
 fn dot_cyl() {
     check_model("dot_cyl", Action::Test, || {
-        let n = Dot::new(
-            Shape::Cylinder,
-            DotSpec {
-                pos: P3::origin(),
-                align: C3::P000.into(),
-                size: 2.0,
-                rot: axis_radians(V3::x_axis().unwrap(), PI / 4.),
-            },
-        );
+        let n = Dot::new(DotSpec {
+            pos: P3::origin(),
+            align: C3::P000.into(),
+            size: 2.0,
+            rot: axis_radians(V3::x_axis().unwrap(), PI / 4.),
+            shape: DotShape::Cylinder,
+        });
         Ok(n.into())
     })
 }
@@ -707,25 +693,21 @@ fn spiral_cuboid() {
 #[test]
 fn snake() {
     check_model("snake", Action::Test, || {
-        let start = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::origin(),
-                align: C3::P111.into(),
-                size: 2.0,
-                rot: R3::identity(),
-            },
-        );
+        let start = Dot::new(DotSpec {
+            pos: P3::origin(),
+            align: C3::P111.into(),
+            size: 2.0,
+            rot: R3::identity(),
+            shape: DotShape::Cube,
+        });
 
-        let end = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::new(-5., -10., 7.),
-                align: C3::P111.into(),
-                size: 2.0,
-                rot: R3::identity(),
-            },
-        );
+        let end = Dot::new(DotSpec {
+            pos: P3::new(-5., -10., 7.),
+            align: C3::P111.into(),
+            size: 2.0,
+            rot: R3::identity(),
+            shape: DotShape::Cube,
+        });
 
         let snake = Snake::new(start, end, [Axis::X, Axis::Z, Axis::Y])?;
 
@@ -791,15 +773,13 @@ fn fancy_translation() {
 fn dot_fancy_translation() {
     check_model("dot_fancy_translation", Action::Test, || {
         let align = C3::P000;
-        let a = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::new(0., 0., 0.),
-                align: align.into(),
-                size: 1.0,
-                rot: rotation_between(Axis::X, V3::new(1., 1., 0.))?,
-            },
-        );
+        let a = Dot::new(DotSpec {
+            pos: P3::new(0., 0., 0.),
+            align: align.into(),
+            size: 1.0,
+            rot: rotation_between(Axis::X, V3::new(1., 1., 0.))?,
+            shape: DotShape::Cube,
+        });
         let b =
             a.translate_along_until(V3::new(9., 12., 15.), Axis::X, -3., align);
         Ok(union![a, b])
@@ -809,15 +789,13 @@ fn dot_fancy_translation() {
 #[test]
 fn dot_fancy_translation2() {
     check_model("dot_fancy_translation2", Action::Test, || {
-        let a = Dot::new(
-            Shape::Cube,
-            DotSpec {
-                pos: P3::new(0., 0., 0.),
-                align: DotAlign::centroid(),
-                size: 1.0,
-                rot: rotation_between(Axis::X, V3::new(1., 1., 0.))?,
-            },
-        );
+        let a = Dot::new(DotSpec {
+            pos: P3::new(0., 0., 0.),
+            align: DotAlign::centroid(),
+            size: 1.0,
+            rot: rotation_between(Axis::X, V3::new(1., 1., 0.))?,
+            shape: DotShape::Cube,
+        });
         let b = a.translate_along_until(
             V3::new(5., 0., 0.),
             Axis::X,

@@ -1,7 +1,9 @@
 use core::utils::{
     axis_degrees, rotate, rotation_between, sin_deg, Axis, CubeFace, P3, R3, V3,
 };
-use core::{mark, Dot, DotAlign, DotSpec, MapDots, MinMaxCoord, Shape, Tree};
+use core::{
+    mark, Dot, DotAlign, DotShape, DotSpec, MapDots, MinMaxCoord, Tree,
+};
 use errors::ScadDotsError;
 
 #[derive(Debug, Clone, Copy, MapDots, MinMaxCoord)]
@@ -32,7 +34,7 @@ pub enum TriCorner {
 
 impl Triangle {
     pub fn new(spec: TriangleSpec) -> Result<Triangle, ScadDotsError> {
-        let shape = Shape::Cylinder;
+        let shape = DotShape::Cylinder;
         let b_spec = DotSpec {
             pos: spec.center(TriCorner::B),
             align: DotAlign::center_face(CubeFace::Z0),

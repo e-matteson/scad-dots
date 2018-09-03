@@ -2,7 +2,7 @@ use core::utils::{
     midpoint, Axis, Corner1 as C1, Corner2 as C2, Corner3 as C3, CubeFace,
     Fraction, P3, R3, V3,
 };
-use core::{mark, Dot, MapDots, MinMaxCoord, Shape, Tree};
+use core::{mark, Dot, DotShape, MapDots, MinMaxCoord, Tree};
 use errors::ScadDotsError;
 use post::{Post, PostLink};
 use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec};
@@ -59,14 +59,14 @@ pub enum CuboidShapes {
     Cylinder,
     Round,
     Custom {
-        p000: Shape,
-        p100: Shape,
-        p110: Shape,
-        p010: Shape,
-        p001: Shape,
-        p101: Shape,
-        p111: Shape,
-        p011: Shape,
+        p000: DotShape,
+        p100: DotShape,
+        p110: DotShape,
+        p010: DotShape,
+        p001: DotShape,
+        p101: DotShape,
+        p111: DotShape,
+        p011: DotShape,
     },
 }
 
@@ -236,7 +236,7 @@ impl Cuboid {
     where
         T: Into<CuboidShapes>,
     {
-        if dot.shape != Shape::Cube {
+        if dot.shape != DotShape::Cube {
             return Err(ScadDotsError::Args
                 .context("Cuboid can only be created from a cube-shaped dot"));
         }
@@ -491,12 +491,12 @@ impl CuboidShapes {
     }
 }
 
-impl From<Shape> for CuboidShapes {
-    fn from(shape: Shape) -> CuboidShapes {
+impl From<DotShape> for CuboidShapes {
+    fn from(shape: DotShape) -> CuboidShapes {
         match shape {
-            Shape::Cube => CuboidShapes::Cube,
-            Shape::Sphere => CuboidShapes::Sphere,
-            Shape::Cylinder => CuboidShapes::Cylinder,
+            DotShape::Cube => CuboidShapes::Cube,
+            DotShape::Sphere => CuboidShapes::Sphere,
+            DotShape::Cylinder => CuboidShapes::Cylinder,
         }
     }
 }

@@ -3,7 +3,9 @@ use scad_generator::*;
 use core::utils::{
     radians_to_degrees, rotate, unwrap_rot_axis, Corner3 as C3, P2, P3, V2, V3,
 };
-use core::{Cylinder, Dot, Extrusion, Shape, Tree, TreeObject, TreeOperator};
+use core::{
+    Cylinder, Dot, DotShape, Extrusion, Tree, TreeObject, TreeOperator,
+};
 use errors::{ResultExt, ScadDotsError};
 
 pub trait Render {
@@ -202,26 +204,26 @@ impl Dot {
     fn scad_to_p000(&self) -> V3 {
         let half = self.size / 2.;
         let v = match self.shape {
-            Shape::Cube => V3::new(0., 0., 0.),
-            Shape::Sphere => V3::new(half, half, half),
-            Shape::Cylinder => V3::new(half, half, 0.),
+            DotShape::Cube => V3::new(0., 0., 0.),
+            DotShape::Sphere => V3::new(half, half, half),
+            DotShape::Cylinder => V3::new(half, half, 0.),
         };
         rotate(self.rot, v)
     }
 
     pub fn render_shape(&self) -> ScadObject {
         match self.shape {
-            Shape::Cube =>
+            DotShape::Cube =>
             // Make cube, with bottom face centered on the origin
             {
                 scad!(Cube(V3::new(self.size, self.size, self.size)))
             }
-            Shape::Sphere =>
+            DotShape::Sphere =>
             // Make sphere, with bottom surface touching the origin
             {
                 scad!(Sphere(Diameter(self.size)))
             }
-            Shape::Cylinder =>
+            DotShape::Cylinder =>
             // Make cylinder, with bottom face centered on the origin
             {
                 scad!(Cylinder(self.size, Diameter(self.size)))

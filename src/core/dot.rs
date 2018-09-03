@@ -12,7 +12,7 @@ use errors::ScadDotsError;
 /// The smallest building block of the 3d model.
 #[derive(Debug, Clone, Copy)]
 pub struct Dot {
-    pub shape: Shape,
+    pub shape: DotShape,
     pub p000: P3,
     pub size: f32,
     pub rot: R3,
@@ -24,7 +24,7 @@ pub struct DotSpec {
     pub align: DotAlign,
     pub size: f32,
     pub rot: R3,
-    pub shape: Shape,
+    pub shape: DotShape,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -35,7 +35,7 @@ pub enum DotAlign {
 
 /// The possible shapes of a dot
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Shape {
+pub enum DotShape {
     Cube,
     Sphere,
     Cylinder,
@@ -134,7 +134,7 @@ impl Dot {
     /// rotation, regardless of the rotation of the original dot. It will have
     /// the same size as the original dot. If shape is None, it will have the
     /// same shape as the original.
-    pub fn drop(&self, bottom_z: f32, shape: Option<Shape>) -> Dot {
+    pub fn drop(&self, bottom_z: f32, shape: Option<DotShape>) -> Dot {
         self.drop_along(Axis::Z.into(), bottom_z, shape)
     }
 
@@ -145,7 +145,7 @@ impl Dot {
         &self,
         direction: V3,
         bottom_z: f32,
-        shape: Option<Shape>,
+        shape: Option<DotShape>,
     ) -> Dot {
         // Get the position of the center of the dot
         let pos = translate_p3_along_until(
@@ -240,7 +240,7 @@ impl Dot {
         new
     }
 
-    pub fn with_shape(&self, new_shape: Shape) -> Dot {
+    pub fn with_shape(&self, new_shape: DotShape) -> Dot {
         let mut new = *self;
         new.shape = new_shape;
         new
@@ -328,7 +328,7 @@ impl Default for Dot {
             align: DotAlign::Corner(C3::P000),
             size: 1.,
             rot: R3::identity(),
-            shape: Shape::Cube,
+            shape: DotShape::Cube,
         })
     }
 }
@@ -362,7 +362,7 @@ impl DotSpec {
         new
     }
 
-    pub fn with_shape(self, new_value: Shape) -> Self {
+    pub fn with_shape(self, new_value: DotShape) -> Self {
         let mut new = self;
         new.shape = new_value;
         new
@@ -508,6 +508,6 @@ pub fn mark(pos: P3, size: f32) -> Tree {
         align: DotAlign::centroid(),
         size: size,
         rot: R3::identity(),
-        shape: Shape::Sphere,
+        shape: DotShape::Sphere,
     }).into()
 }

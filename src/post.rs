@@ -1,6 +1,7 @@
 use core::utils::{midpoint, Axis, Corner1 as C1, Corner3 as C3, P3, R3, V3};
 use core::{
-    chain, chain_loop, Dot, DotSpec, MapDots, MinMaxCoord, Shape, Snake, Tree,
+    chain, chain_loop, Dot, DotShape, DotSpec, MapDots, MinMaxCoord, Snake,
+    Tree,
 };
 
 use errors::ScadDotsError;
@@ -45,7 +46,7 @@ pub enum PostShapes {
     Sphere,
     Cylinder,
     Round, // bottom cylinder, top sphere
-    Custom { top: Shape, bot: Shape },
+    Custom { top: DotShape, bot: DotShape },
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -276,19 +277,19 @@ impl PostAlign {
 }
 
 impl PostShapes {
-    fn get(&self, upper_or_lower: C1) -> Shape {
+    fn get(&self, upper_or_lower: C1) -> DotShape {
         match *self {
             PostShapes::Custom { bot, top } => match upper_or_lower {
                 C1::P0 => bot,
                 C1::P1 => top,
             },
             PostShapes::Round => match upper_or_lower {
-                C1::P0 => Shape::Cylinder,
-                C1::P1 => Shape::Sphere,
+                C1::P0 => DotShape::Cylinder,
+                C1::P1 => DotShape::Sphere,
             },
-            PostShapes::Cube => Shape::Cube,
-            PostShapes::Sphere => Shape::Sphere,
-            PostShapes::Cylinder => Shape::Cylinder,
+            PostShapes::Cube => DotShape::Cube,
+            PostShapes::Sphere => DotShape::Sphere,
+            PostShapes::Cylinder => DotShape::Cylinder,
         }
     }
 }

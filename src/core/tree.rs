@@ -1,5 +1,5 @@
 use core::utils::{ColorSpec, V3};
-use core::{Cylinder, Dot, Extrusion, Shape};
+use core::{Cylinder, Dot, DotShape, Extrusion};
 
 #[derive(Debug, Clone)]
 pub enum Tree {
@@ -154,7 +154,11 @@ where
 // TODO use intra-docs link when that works.
 
 /// Call `.drop(bottom_z, shape)` on each of the given Dots. Return the hull of all the original dots and all the dropped dots.
-pub fn drop_solid(dots: &[Dot], bottom_z: f32, shape: Option<Shape>) -> Tree {
+pub fn drop_solid(
+    dots: &[Dot],
+    bottom_z: f32,
+    shape: Option<DotShape>,
+) -> Tree {
     let dropped_dots = dots.iter().map(|d| d.drop(bottom_z, shape));
     let all_dots: Vec<_> =
         dots.into_iter().cloned().chain(dropped_dots).collect();
