@@ -91,60 +91,55 @@ pub trait CuboidSpecTrait: Copy {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl CuboidAlign {
-    pub fn origin() -> CuboidAlign {
-        CuboidAlign::outside(C3::P000)
+    pub fn origin() -> Self {
+        Self::outside(C3::P000)
     }
 
-    pub fn outside(corner: C3) -> CuboidAlign {
+    pub fn outside(corner: C3) -> Self {
         CuboidAlign::Corner {
             cuboid: corner,
             dot: corner,
         }
     }
 
-    pub fn inside(corner: C3) -> CuboidAlign {
+    pub fn inside(corner: C3) -> Self {
         CuboidAlign::Corner {
             cuboid: corner,
             dot: corner.copy_invert_all_axes(),
         }
     }
 
-    pub fn center_face(face: CubeFace) -> CuboidAlign {
+    pub fn center_face(face: CubeFace) -> Self {
         let (a, b) = face.corners();
-        CuboidAlign::midpoint(CuboidAlign::outside(a), CuboidAlign::outside(b))
+        Self::midpoint(Self::outside(a), Self::outside(b))
             .expect("got bad corners from CubeFace")
     }
 
-    pub fn center_inside_face(face: CubeFace) -> CuboidAlign {
+    pub fn center_inside_face(face: CubeFace) -> Self {
         let (a, b) = face.corners();
-        CuboidAlign::midpoint(CuboidAlign::inside(a), CuboidAlign::inside(b))
+        Self::midpoint(Self::inside(a), Self::inside(b))
             .expect("got bad corners from CubeFace")
     }
 
-    pub fn centroid() -> CuboidAlign {
-        CuboidAlign::midpoint(
-            CuboidAlign::outside(C3::P000),
-            CuboidAlign::outside(C3::P111),
-        ).expect("bad args to midpoint calculation")
+    pub fn centroid() -> Self {
+        Self::midpoint(Self::outside(C3::P000), Self::outside(C3::P111))
+            .expect("bad args to midpoint calculation")
     }
 
-    pub fn outside_midpoint(a: C3, b: C3) -> CuboidAlign {
+    pub fn outside_midpoint(a: C3, b: C3) -> Self {
         // Return the midpoint between the two outer corners a and b
         // TODO better name?
-        CuboidAlign::midpoint(CuboidAlign::outside(a), CuboidAlign::outside(b))
+        Self::midpoint(Self::outside(a), Self::outside(b))
             .expect("bug in outside_midpoint()")
     }
 
-    pub fn inside_midpoint(a: C3, b: C3) -> CuboidAlign {
+    pub fn inside_midpoint(a: C3, b: C3) -> Self {
         // Return the midpoint between the two inner corners a and b
-        CuboidAlign::midpoint(CuboidAlign::inside(a), CuboidAlign::inside(b))
+        Self::midpoint(Self::inside(a), Self::inside(b))
             .expect("bug in inside_midpoint()")
     }
 
-    pub fn midpoint(
-        a: CuboidAlign,
-        b: CuboidAlign,
-    ) -> Result<CuboidAlign, ScadDotsError> {
+    pub fn midpoint(a: Self, b: Self) -> Result<Self, ScadDotsError> {
         match (a, b) {
             (
                 CuboidAlign::Corner {
@@ -166,7 +161,7 @@ impl CuboidAlign {
     }
 
     /// Return a list of all possible alignment values
-    pub fn all_corners() -> Vec<CuboidAlign> {
+    pub fn all_corners() -> Vec<Self> {
         let mut v = Vec::new();
         for d in C3::all() {
             for c in C3::all() {
@@ -218,11 +213,11 @@ impl From<CuboidAlign> for RectAlign {
 }
 
 impl Cuboid {
-    pub fn new<T>(spec: T) -> Result<Cuboid, ScadDotsError>
+    pub fn new<T>(spec: T) -> Result<Self, ScadDotsError>
     where
         T: CuboidSpecTrait,
     {
-        Ok(Cuboid {
+        Ok(Self {
             bot: spec.to_rect(C1::P0)?,
             top: spec.to_rect(C1::P1)?,
         })
@@ -232,7 +227,7 @@ impl Cuboid {
         dot: Dot,
         new_size_of_dots: f32,
         shapes: T,
-    ) -> Result<Cuboid, ScadDotsError>
+    ) -> Result<Self, ScadDotsError>
     where
         T: Into<CuboidShapes>,
     {
@@ -251,7 +246,7 @@ impl Cuboid {
             size: new_size_of_dots,
             shapes: shapes.into(),
         };
-        Cuboid::new(spec)
+        Self::new(spec)
     }
 
     /// Return a vector describing the direction and length of 1 edge of the

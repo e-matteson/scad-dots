@@ -68,7 +68,7 @@ impl EqMethod {
 }
 
 impl ScadThing {
-    pub fn map_eq(&self, other: &ScadThing, method: EqMethod) -> bool {
+    pub fn map_eq(&self, other: &Self, method: EqMethod) -> bool {
         if !self.variant_eq(other) {
             println!("\nNOT EQUAL: variants\n");
             return false;
@@ -106,7 +106,7 @@ impl ScadThing {
         true
     }
 
-    fn variant_eq(&self, other: &ScadThing) -> bool {
+    fn variant_eq(&self, other: &Self) -> bool {
         std::mem::discriminant(self) == std::mem::discriminant(other)
     }
 
@@ -155,7 +155,7 @@ impl ScadThing {
         }
     }
 
-    fn children(&self) -> Vec<ScadThing> {
+    fn children(&self) -> Vec<Self> {
         match *self {
             ScadThing::Translate(_, ref children)
             | ScadThing::Rotate(_, _, ref children)

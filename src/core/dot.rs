@@ -116,8 +116,8 @@ pub trait MinMaxCoord {
 
 impl Dot {
     /// Create a new dot.
-    pub fn new(spec: DotSpec) -> Dot {
-        Dot {
+    pub fn new(spec: DotSpec) -> Self {
+        Self {
             shape: spec.shape,
             p000: spec.origin(),
             size: spec.size,
@@ -134,7 +134,7 @@ impl Dot {
     /// rotation, regardless of the rotation of the original dot. It will have
     /// the same size as the original dot. If shape is None, it will have the
     /// same shape as the original.
-    pub fn drop(&self, bottom_z: f32, shape: Option<DotShape>) -> Dot {
+    pub fn drop(&self, bottom_z: f32, shape: Option<DotShape>) -> Self {
         self.drop_along(Axis::Z.into(), bottom_z, shape)
     }
 
@@ -146,7 +146,7 @@ impl Dot {
         direction: V3,
         bottom_z: f32,
         shape: Option<DotShape>,
-    ) -> Dot {
+    ) -> Self {
         // Get the position of the center of the dot
         let pos = translate_p3_along_until(
             self.pos(DotAlign::centroid()),
@@ -157,7 +157,7 @@ impl Dot {
 
         // Create a Dot whose bottom face is centered on that position.
         // Reset its rotation.
-        Dot::new(DotSpec {
+        Self::new(DotSpec {
             pos,
             align: DotAlign::center_face(CubeFace::Z0),
             size: self.size,
@@ -166,8 +166,8 @@ impl Dot {
         })
     }
 
-    pub fn translate(&self, offset: V3) -> Dot {
-        Dot {
+    pub fn translate(&self, offset: V3) -> Self {
+        Self {
             shape: self.shape,
             p000: self.p000 + offset,
             size: self.size,
@@ -175,8 +175,8 @@ impl Dot {
         }
     }
 
-    pub fn rotate(&self, rot: R3) -> Dot {
-        Dot {
+    pub fn rotate(&self, rot: R3) -> Self {
+        Self {
             shape: self.shape,
             p000: rot * self.p000,
             size: self.size,
@@ -184,14 +184,14 @@ impl Dot {
         }
     }
 
-    pub fn rotate_to(&self, new_rot: R3) -> Dot {
+    pub fn rotate_to(&self, new_rot: R3) -> Self {
         // TODO check
         let rot_difference = self.rot.rotation_to(&new_rot);
         self.rotate(rot_difference)
     }
 
     /// Make a copy of the dot at the new position.
-    pub fn translate_to(&self, pos: P3, align: DotAlign) -> Dot {
+    pub fn translate_to(&self, pos: P3, align: DotAlign) -> Self {
         let spec = DotSpec {
             pos,
             align,
@@ -199,7 +199,7 @@ impl Dot {
             rot: self.rot,
             shape: self.shape,
         };
-        Dot::new(spec)
+        Self::new(spec)
     }
 
     /// Translate the dot along the given direction vector, until the part of
@@ -210,7 +210,7 @@ impl Dot {
         axis: Axis,
         axis_value: f32,
         align: T,
-    ) -> Dot
+    ) -> Self
     where
         T: Clone,
         DotAlign: From<T>,
@@ -225,22 +225,22 @@ impl Dot {
             rot: self.rot,
             shape: self.shape,
         };
-        Dot::new(spec)
+        Self::new(spec)
     }
 
-    pub fn with_coord(&self, coordinate: f32, dimension: Axis) -> Dot {
+    pub fn with_coord(&self, coordinate: f32, dimension: Axis) -> Self {
         let mut new = *self;
         new.p000[dimension.index()] = coordinate;
         new
     }
 
-    pub fn copy_to_other_dim(&self, other: Dot, dimension: Axis) -> Dot {
+    pub fn copy_to_other_dim(&self, other: Self, dimension: Axis) -> Self {
         let mut new = *self;
         new.p000[dimension.index()] = other.p000[dimension.index()];
         new
     }
 
-    pub fn with_shape(&self, new_shape: DotShape) -> Dot {
+    pub fn with_shape(&self, new_shape: DotShape) -> Self {
         let mut new = *self;
         new.shape = new_shape;
         new
@@ -265,20 +265,20 @@ impl Dot {
 
     /// Get distance between the origins of the dots.
     /// Does NOT calculate actual minimum distance between their surfaces!
-    pub fn dist(&self, other: Dot) -> f32 {
+    pub fn dist(&self, other: Self) -> f32 {
         (self.p000 - other.p000).norm()
     }
 
-    pub fn less_than(&self, other: Dot, axis: Axis) -> bool {
+    pub fn less_than(&self, other: Self, axis: Axis) -> bool {
         // self.p000[axis.index()] < other.p000[axis.index()]
         self.min_coord(axis) < other.min_coord(axis)
     }
 
     pub fn snake(
         &self,
-        other: Dot,
+        other: Self,
         order: [Axis; 3],
-    ) -> Result<[Dot; 4], ScadDotsError> {
+    ) -> Result<[Self; 4], ScadDotsError> {
         Ok(Snake::new(*self, other, order)?.dots)
     }
 
@@ -288,7 +288,7 @@ impl Dot {
         axis: Option<V3>,
         count: usize,
         adjust_dot_rotations: bool,
-    ) -> Result<Vec<Dot>, ScadDotsError> {
+    ) -> Result<Vec<Self>, ScadDotsError> {
         let axis = axis.unwrap_or_else(|| rotate(self.rot, Axis::Z));
 
         let mut dots = Vec::new();
@@ -302,7 +302,7 @@ impl Dot {
                 self.rot
             };
 
-            let new = Dot::new(DotSpec {
+            let new = Self::new(DotSpec {
                 pos: self.pos(DotAlign::centroid()) + offset,
                 align: DotAlign::centroid(),
                 size: self.size,
@@ -322,8 +322,8 @@ impl Dot {
 //     }
 // }
 impl Default for Dot {
-    fn default() -> Dot {
-        Dot::new(DotSpec {
+    fn default() -> Self {
+        Self::new(DotSpec {
             pos: P3::origin(),
             align: DotAlign::Corner(C3::P000),
             size: 1.,
@@ -370,15 +370,15 @@ impl DotSpec {
 }
 
 impl DotAlign {
-    pub fn origin() -> DotAlign {
+    pub fn origin() -> Self {
         C3::P000.into()
     }
 
-    pub fn centroid() -> DotAlign {
+    pub fn centroid() -> Self {
         DotAlign::Midpoint(C3::P000, C3::P111)
     }
 
-    pub fn center_face(face: CubeFace) -> DotAlign {
+    pub fn center_face(face: CubeFace) -> Self {
         let (a, b) = face.corners();
         DotAlign::Midpoint(a, b)
     }

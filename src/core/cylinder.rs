@@ -72,7 +72,7 @@ impl CylinderSpec {
 
 impl CylinderAlign {
     /// Return a vector from a cylinder's canonical alignment point (at the center of the bottom circle) to this alignment point.
-    fn offset(self, _diameter: f32, height: f32, rot: R3) -> V3 {
+    fn offset(self, diameter: f32, height: f32, rot: R3) -> V3 {
         match self {
             CylinderAlign::EndCenter(end) => match end {
                 C1::P0 => V3::zeros(),
@@ -81,9 +81,9 @@ impl CylinderAlign {
             CylinderAlign::Centroid => {
                 // Find the vector to halfway between the 2 end-centers.
                 let to_top = CylinderAlign::EndCenter(C1::P1)
-                    .offset(_diameter, height, rot);
+                    .offset(diameter, height, rot);
                 let to_bot = CylinderAlign::EndCenter(C1::P0)
-                    .offset(_diameter, height, rot);
+                    .offset(diameter, height, rot);
                 (to_top + to_bot) / 2.
             }
         }

@@ -33,7 +33,7 @@ pub enum TriCorner {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Triangle {
-    pub fn new(spec: TriangleSpec) -> Result<Triangle, ScadDotsError> {
+    pub fn new(spec: TriangleSpec) -> Result<Self, ScadDotsError> {
         let a_spec = DotSpec {
             pos: spec.center(TriCorner::A),
             align: DotAlign::center_face(CubeFace::Z0),
@@ -45,7 +45,7 @@ impl Triangle {
         let b_spec = a_spec.with_pos(spec.center(TriCorner::B));
         let c_spec = a_spec.with_pos(spec.center(TriCorner::C));
 
-        Ok(Triangle {
+        Ok(Self {
             a: Dot::new(a_spec),
             b: Dot::new(b_spec),
             c: Dot::new(c_spec),

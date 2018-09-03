@@ -73,12 +73,12 @@ pub trait RectSpecTrait: Copy {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Rect {
-    pub fn new<T>(spec: T) -> Result<Rect, ScadDotsError>
+    pub fn new<T>(spec: T) -> Result<Self, ScadDotsError>
     where
         T: RectSpecTrait,
     {
         // TODO check dimensions, ensure positive
-        Ok(Rect {
+        Ok(Self {
             p00: spec.to_dot(C2::P00)?,
             p01: spec.to_dot(C2::P01)?,
             p10: spec.to_dot(C2::P10)?,
@@ -297,15 +297,12 @@ impl RectSpecTrait for RectSpec {
 
 impl RectAlign {
     /// Align to the Rect's origin, the outside P000 corner.
-    pub fn origin() -> RectAlign {
-        RectAlign::outside(C3::P000)
+    pub fn origin() -> Self {
+        Self::outside(C3::P000)
     }
 
     // Align to the midpoint of the other 2 given alignment positions.
-    pub fn midpoint(
-        a: RectAlign,
-        b: RectAlign,
-    ) -> Result<RectAlign, ScadDotsError> {
+    pub fn midpoint(a: Self, b: Self) -> Result<Self, ScadDotsError> {
         match (a, b) {
             (
                 RectAlign::Corner {
@@ -327,18 +324,18 @@ impl RectAlign {
     }
 
     /// Align to the midpoint bteween the 2 outer corners of a `Rect`, a and b.
-    pub fn outside_midpoint(a: C3, b: C3) -> RectAlign {
-        RectAlign::midpoint(RectAlign::outside(a), RectAlign::outside(b))
+    pub fn outside_midpoint(a: C3, b: C3) -> Self {
+        Self::midpoint(Self::outside(a), Self::outside(b))
             .expect("bug in outside_midpoint()")
     }
 
     /// Align to the midpoint between the two inner corners of a `Rect`, a and b. "Inner corner" means, imagine a hollow rectangle made of 4 cubes, linked together to form a thick border. The empty space within the border is a like a box with 8 corners, each called inner corners.
-    pub fn inside_midpoint(a: C3, b: C3) -> RectAlign {
-        RectAlign::midpoint(RectAlign::inside(a), RectAlign::inside(b))
+    pub fn inside_midpoint(a: C3, b: C3) -> Self {
+        Self::midpoint(Self::inside(a), Self::inside(b))
             .expect("bug in inside_midpoint()")
     }
 
-    pub fn outside(corner: C3) -> RectAlign {
+    pub fn outside(corner: C3) -> Self {
         RectAlign::Corner {
             dot: corner,
             rect: corner.into(),
@@ -346,7 +343,7 @@ impl RectAlign {
     }
 
     /// Align to the given inner corner. "Inner corner" means, imagine a hollow rectangle made of 4 cube-shaped dots, linked together to form a thick border. The empty space within the border is a like a box with 8 corners, each called inner corners.
-    pub fn inside(corner: C3) -> RectAlign {
+    pub fn inside(corner: C3) -> Self {
         // TODO this is not quite analagous to CuboidAlign::inside(), because
         // it's on either the top of bottom surface. Does that matter? Should
         // there be a cuboid one for inside of top/bottom surface?
@@ -357,22 +354,20 @@ impl RectAlign {
     }
 
     /// Align to the center-of-mass.
-    pub fn centroid() -> RectAlign {
-        RectAlign::midpoint(
-            RectAlign::outside(C3::P000),
-            RectAlign::outside(C3::P111),
-        ).expect("bad args to midpoint calculation")
+    pub fn centroid() -> Self {
+        Self::midpoint(Self::outside(C3::P000), Self::outside(C3::P111))
+            .expect("bad args to midpoint calculation")
     }
 
     /// Align to the center of the given face of the Rect.
-    pub fn center_face(face: CubeFace) -> RectAlign {
+    pub fn center_face(face: CubeFace) -> Self {
         let (a, b) = face.corners();
-        RectAlign::midpoint(RectAlign::outside(a), RectAlign::outside(b))
+        Self::midpoint(Self::outside(a), Self::outside(b))
             .expect("got bad corners from CubeFace")
     }
 
     /// Return all the corner alignments.
-    fn all_corners() -> Vec<RectAlign> {
+    fn all_corners() -> Vec<Self> {
         let mut v = Vec::new();
         for d in C3::all() {
             for r in C2::all_clockwise() {

@@ -188,7 +188,7 @@ impl Corner2 {
         rotate(rot, corner_vec.component_mul(&dimensions))
     }
 
-    pub fn all_clockwise_from(corner: Corner2) -> Vec<Corner2> {
+    pub fn all_clockwise_from(corner: Self) -> Vec<Self> {
         let index = match corner {
             // must match order of all()
             Corner2::P00 => 0,
@@ -196,12 +196,12 @@ impl Corner2 {
             Corner2::P11 => 2,
             Corner2::P10 => 3,
         };
-        let mut v = Corner2::all_clockwise();
+        let mut v = Self::all_clockwise();
         v.rotate_left(index);
         v
     }
 
-    pub fn all_clockwise() -> Vec<Corner2> {
+    pub fn all_clockwise() -> Vec<Self> {
         vec![Corner2::P00, Corner2::P01, Corner2::P11, Corner2::P10]
     }
 
@@ -279,7 +279,7 @@ impl Corner3 {
                 bools.2 = new_val;
             }
         }
-        Corner3::from_bools(bools)
+        Self::from_bools(bools)
     }
 
     pub fn copy_invert(self, axis: Axis) -> Self {
@@ -293,7 +293,7 @@ impl Corner3 {
             .copy_invert(Axis::Z)
     }
 
-    pub fn all() -> Vec<Corner3> {
+    pub fn all() -> Vec<Self> {
         vec![
             Corner3::P000,
             Corner3::P010,
@@ -319,7 +319,7 @@ impl Corner3 {
         }
     }
 
-    fn from_bools(bools: (bool, bool, bool)) -> Corner3 {
+    fn from_bools(bools: (bool, bool, bool)) -> Self {
         match bools {
             (false, false, false) => Corner3::P000,
             (false, true, false) => Corner3::P010,
@@ -419,7 +419,7 @@ impl CubeFace {
         }
     }
 
-    pub fn all() -> Vec<CubeFace> {
+    pub fn all() -> Vec<Self> {
         vec![
             CubeFace::X0,
             CubeFace::Y0,
@@ -432,7 +432,7 @@ impl CubeFace {
 }
 
 impl Fraction {
-    pub fn new(value: f32) -> Result<Fraction, ScadDotsError> {
+    pub fn new(value: f32) -> Result<Self, ScadDotsError> {
         if value < 0. || value > 1. {
             return Err(ScadDotsError::Ratio(value));
         }
@@ -603,16 +603,14 @@ pub fn radial_offset(
 }
 
 pub(crate) fn unwrap_rot_axis(rot: R3) -> Result<V3, ScadDotsError> {
-    match rot.axis() {
-        Some(unit) => Ok(unit.unwrap()),
-        None => {
-            if rot.angle() != 0.0 {
-                // TODO approx equal?
-                return Err(ScadDotsError::Rotation);
-            }
-            // Shouldn't matter what axis we use here, since the angle is 0
-            Ok(Axis::Z.into())
-        }
+    if let Some(unit) = rot.axis() {
+        Ok(unit.unwrap())
+    } else if rot.angle() == 0.0 {
+        // TODO approx equal?
+        // Shouldn't matter what axis we use here, since the angle is 0
+        Ok(Axis::Z.into())
+    } else {
+        Err(ScadDotsError::Rotation)
     }
 }
 

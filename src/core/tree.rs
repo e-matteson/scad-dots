@@ -81,45 +81,45 @@ macro_rules! red {
 }
 
 impl Tree {
-    pub fn union<T>(tree_like: Vec<T>) -> Tree
+    pub fn union<T>(tree_like: Vec<T>) -> Self
     where
-        T: Into<Tree>,
+        T: Into<Self>,
     {
         Tree::Operator(TreeOperator::Union(
             tree_like.into_iter().map(|x| x.into()).collect(),
         ))
     }
 
-    pub fn hull<T>(tree_like: Vec<T>) -> Tree
+    pub fn hull<T>(tree_like: Vec<T>) -> Self
     where
-        T: Into<Tree>,
+        T: Into<Self>,
     {
         Tree::Operator(TreeOperator::Hull(
             tree_like.into_iter().map(|x| x.into()).collect(),
         ))
     }
 
-    pub fn diff<T>(tree_like: Vec<T>) -> Tree
+    pub fn diff<T>(tree_like: Vec<T>) -> Self
     where
-        T: Into<Tree>,
+        T: Into<Self>,
     {
         Tree::Operator(TreeOperator::Diff(
             tree_like.into_iter().map(|x| x.into()).collect(),
         ))
     }
 
-    pub fn intersect<T>(tree_like: Vec<T>) -> Tree
+    pub fn intersect<T>(tree_like: Vec<T>) -> Self
     where
-        T: Into<Tree>,
+        T: Into<Self>,
     {
         Tree::Operator(TreeOperator::Intersect(
             tree_like.into_iter().map(|x| x.into()).collect(),
         ))
     }
 
-    pub fn mirror<S, T>(normal: S, tree_like: T) -> Tree
+    pub fn mirror<S, T>(normal: S, tree_like: T) -> Self
     where
-        T: Into<Tree>,
+        T: Into<Self>,
         S: Into<V3>,
     {
         Tree::Operator(TreeOperator::Mirror(
@@ -128,16 +128,16 @@ impl Tree {
         ))
     }
 
-    pub fn color<T>(color: ColorSpec, tree_like: T) -> Tree
+    pub fn color<T>(color: ColorSpec, tree_like: T) -> Self
     where
-        T: Into<Tree>,
+        T: Into<Self>,
     {
         Tree::Operator(TreeOperator::Color(color, Box::new(tree_like.into())))
     }
 }
 
 impl From<Dot> for Tree {
-    fn from(dot: Dot) -> Tree {
+    fn from(dot: Dot) -> Self {
         Tree::Object(TreeObject::Dot(dot))
     }
 }

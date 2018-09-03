@@ -70,7 +70,7 @@ pub enum PostSnakeLink {
 
 impl Post {
     /// Create a new Post from the given specification.
-    pub fn new<T>(spec: T) -> Result<Post, ScadDotsError>
+    pub fn new<T>(spec: T) -> Result<Self, ScadDotsError>
     where
         T: PostSpecTrait,
     {
@@ -81,7 +81,7 @@ impl Post {
         // if bot.dist(top) < size {
         //     bail!("post is too short, top and bottom dot overlap");
         // }
-        Ok(Post { top, bot })
+        Ok(Self { top, bot })
     }
 
     /// Return the absolute position of the given alignment point on the Post.
@@ -137,14 +137,14 @@ impl Post {
     }
 
     /// Make a copy of this Post, but with the lower Dot raised up by the given distance.
-    pub fn copy_raise_bot(&self, distance: f32) -> Result<Post, ScadDotsError> {
+    pub fn copy_raise_bot(&self, distance: f32) -> Result<Self, ScadDotsError> {
         if distance > self.edge_length(Axis::Z) - self.top.size {
             return Err(ScadDotsError::Dimension.context(
                 "failed to copy_raise_bot, new post would be too short",
             ));
         }
         let translation_vec = distance * self.edge_unit_vec(Axis::Z);
-        Ok(Post {
+        Ok(Self {
             top: self.top,
             bot: self.bot.translate(translation_vec),
         })
@@ -152,38 +152,38 @@ impl Post {
 
     pub fn snake(
         &self,
-        other: Post,
+        other: Self,
         order: [Axis; 3],
     ) -> Result<PostSnake, ScadDotsError> {
         let tops = Snake::new(self.top, other.top, order)?.dots;
         let bots = Snake::new(self.bot, other.bot, order)?.dots;
-        let mut posts = [Post::default(); 4];
-        posts[0] = Post {
+        let mut posts = [Self::default(); 4];
+        posts[0] = Self {
             top: tops[0],
             bot: bots[0],
         };
-        posts[1] = Post {
+        posts[1] = Self {
             top: tops[1],
             bot: bots[1],
         };
-        posts[2] = Post {
+        posts[2] = Self {
             top: tops[2],
             bot: bots[2],
         };
-        posts[3] = Post {
+        posts[3] = Self {
             top: tops[3],
             bot: bots[3],
         };
         Ok(PostSnake { posts })
     }
 
-    pub fn chain(posts: &[Post]) -> Result<Tree, ScadDotsError> {
+    pub fn chain(posts: &[Self]) -> Result<Tree, ScadDotsError> {
         let post_trees: Vec<_> =
             posts.into_iter().map(|p| p.link(PostLink::Solid)).collect();
         chain(&post_trees)
     }
 
-    pub fn chain_loop(posts: &[Post]) -> Result<Tree, ScadDotsError> {
+    pub fn chain_loop(posts: &[Self]) -> Result<Tree, ScadDotsError> {
         let post_trees: Vec<_> =
             posts.into_iter().map(|p| p.link(PostLink::Solid)).collect();
         chain_loop(&post_trees)
@@ -218,26 +218,23 @@ impl PostSpecTrait for PostSpec {
 
 impl PostAlign {
     // TODO add centroid, center_face
-    pub fn origin() -> PostAlign {
-        PostAlign::outside(C3::P000)
+    pub fn origin() -> Self {
+        Self::outside(C3::P000)
     }
 
-    pub fn outside(corner: C3) -> PostAlign {
+    pub fn outside(corner: C3) -> Self {
         PostAlign::Corner {
             dot: corner,
             post: corner.into(),
         }
     }
 
-    pub fn outside_midpoint(a: C3, b: C3) -> PostAlign {
-        PostAlign::midpoint(PostAlign::outside(a), PostAlign::outside(b))
+    pub fn outside_midpoint(a: C3, b: C3) -> Self {
+        Self::midpoint(Self::outside(a), Self::outside(b))
             .expect("bug in outside_midpoint()")
     }
 
-    pub fn midpoint(
-        a: PostAlign,
-        b: PostAlign,
-    ) -> Result<PostAlign, ScadDotsError> {
+    pub fn midpoint(a: Self, b: Self) -> Result<Self, ScadDotsError> {
         match (a, b) {
             (
                 PostAlign::Corner {

@@ -22,7 +22,7 @@ impl Extrusion {
             .map(|dot| discard_z(dot.pos(DotAlign::centroid())))
             .collect();
 
-        Extrusion {
+        Self {
             perimeter: centers,
             bottom_z,
             thickness,
