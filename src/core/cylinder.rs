@@ -72,7 +72,7 @@ impl CylinderSpec {
 
 impl CylinderAlign {
     /// Return a vector from a cylinder's canonical alignment point (at the center of the bottom circle) to this alignment point.
-    fn offset(&self, _diameter: f32, height: f32, rot: R3) -> V3 {
+    fn offset(self, _diameter: f32, height: f32, rot: R3) -> V3 {
         match self {
             CylinderAlign::EndCenter(end) => match end {
                 C1::P0 => V3::zeros(),

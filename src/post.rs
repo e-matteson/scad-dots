@@ -81,7 +81,7 @@ impl Post {
         // if bot.dist(top) < size {
         //     bail!("post is too short, top and bottom dot overlap");
         // }
-        Ok(Post { top: top, bot: bot })
+        Ok(Post { top, bot })
     }
 
     /// Return the absolute position of the given alignment point on the Post.
@@ -174,7 +174,7 @@ impl Post {
             top: tops[3],
             bot: bots[3],
         };
-        Ok(PostSnake { posts: posts })
+        Ok(PostSnake { posts })
     }
 
     pub fn chain(posts: &[Post]) -> Result<Tree, ScadDotsError> {
@@ -206,7 +206,7 @@ impl PostSpecTrait for PostSpec {
         let pos =
             origin + upper_or_lower.offset(self.len - self.size, self.rot);
         let spec = DotSpec {
-            pos: pos,
+            pos,
             align: C3::P000.into(),
             size: self.size,
             rot: self.rot,
@@ -249,22 +249,22 @@ impl PostAlign {
                     dot: dot_b,
                 },
             ) => Ok(PostAlign::Midpoint {
-                post_a: post_a,
-                dot_a: dot_a,
-                post_b: post_b,
-                dot_b: dot_b,
+                post_a,
+                dot_a,
+                post_b,
+                dot_b,
             }),
-            _ => return Err(ScadDotsError::Midpoint),
+            _ => Err(ScadDotsError::Midpoint),
         }
     }
 
-    fn offset(&self, dot_size: f32, post_length: f32, rot: R3) -> V3 {
+    fn offset(self, dot_size: f32, post_length: f32, rot: R3) -> V3 {
         let helper = |post: C1, dot: C3| {
             let dot_spec = dot_size * V3::new(1., 1., 1.);
             dot.offset(dot_spec, rot) + post.offset(post_length, rot)
         };
 
-        match *self {
+        match self {
             PostAlign::Corner { post, dot } => helper(post, dot),
             PostAlign::Midpoint {
                 post_a,
@@ -277,8 +277,8 @@ impl PostAlign {
 }
 
 impl PostShapes {
-    fn get(&self, upper_or_lower: C1) -> DotShape {
-        match *self {
+    fn get(self, upper_or_lower: C1) -> DotShape {
+        match self {
             PostShapes::Custom { bot, top } => match upper_or_lower {
                 C1::P0 => bot,
                 C1::P1 => top,

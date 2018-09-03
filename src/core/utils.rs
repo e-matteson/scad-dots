@@ -79,15 +79,15 @@ pub enum ColorSpec {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Axis {
-    pub fn index(&self) -> usize {
-        match *self {
+    pub fn index(self) -> usize {
+        match self {
             Axis::X => 0,
             Axis::Y => 1,
             Axis::Z => 2,
         }
     }
 
-    pub fn of_p3(&self, pos: P3) -> f32 {
+    pub fn of_p3(self, pos: P3) -> f32 {
         // TODO refactor stuff to use this
         pos[self.index()]
     }
@@ -118,28 +118,28 @@ impl Into<Unit<V3>> for Axis {
 }
 
 impl RectEdge {
-    pub fn is_high(&self) -> bool {
-        match *self {
+    pub fn is_high(self) -> bool {
+        match self {
             RectEdge::X0 | RectEdge::Y0 => false,
             RectEdge::X1 | RectEdge::Y1 => true,
         }
     }
 
-    pub fn axis(&self) -> Axis {
-        match *self {
+    pub fn axis(self) -> Axis {
+        match self {
             RectEdge::X0 | RectEdge::X1 => Axis::X,
             RectEdge::Y0 | RectEdge::Y1 => Axis::Y,
         }
     }
 
-    pub fn is_x(&self) -> bool {
-        match *self {
+    pub fn is_x(self) -> bool {
+        match self {
             RectEdge::X0 | RectEdge::X1 => true,
             RectEdge::Y0 | RectEdge::Y1 => false,
         }
     }
 
-    pub fn sign(&self) -> f32 {
+    pub fn sign(self) -> f32 {
         if self.is_high() {
             1.
         } else {
@@ -149,18 +149,18 @@ impl RectEdge {
 }
 
 impl Corner1 {
-    pub fn offset(&self, z_length: f32, rot: R3) -> V3 {
-        let v: V3 = (*self).into();
+    pub fn offset(self, z_length: f32, rot: R3) -> V3 {
+        let v: V3 = self.into();
         rotate(rot, v * z_length)
     }
 
-    pub fn is_high(&self) -> bool {
-        match *self {
+    pub fn is_high(self) -> bool {
+        match self {
             Corner1::P0 => false,
             Corner1::P1 => true,
         }
     }
-    pub fn sign(&self) -> f32 {
+    pub fn sign(self) -> f32 {
         if self.is_high() {
             1.
         } else {
@@ -182,10 +182,10 @@ impl Into<V3> for Corner1 {
 }
 
 impl Corner2 {
-    pub fn offset(&self, dim_vec: V3, rot: R3) -> V3 {
+    pub fn offset(self, dimensions: V3, rot: R3) -> V3 {
         // TODO share code with Corner3.offset()?
-        let v: V3 = self.into();
-        rotate(rot, v.component_mul(&dim_vec))
+        let corner_vec: V3 = self.into();
+        rotate(rot, corner_vec.component_mul(&dimensions))
     }
 
     pub fn all_clockwise_from(corner: Corner2) -> Vec<Corner2> {
@@ -205,26 +205,24 @@ impl Corner2 {
         vec![Corner2::P00, Corner2::P01, Corner2::P11, Corner2::P10]
     }
 
-    pub fn is_high(&self, axis: Axis) -> Result<bool, ScadDotsError> {
+    pub fn is_high(self, axis: Axis) -> Result<bool, ScadDotsError> {
         let bools = self.to_bools();
         Ok(match axis {
             Axis::X => bools.0,
             Axis::Y => bools.1,
             Axis::Z => {
                 return Err(ScadDotsError::Args
-                    .context("The Z value of a Corner2 is not defined")
-                    .into())
+                    .context("The Z value of a Corner2 is not defined"))
             }
         })
     }
 
-    pub fn to_c3(&self, z: Corner1) -> Corner3 {
-        let c3: Corner3 = (*self).into();
-        c3.copy_to(Axis::Z, z.is_high())
+    pub fn to_c3(self, z: Corner1) -> Corner3 {
+        Corner3::from(self).copy_to(Axis::Z, z.is_high())
     }
 
-    fn to_bools(&self) -> (bool, bool) {
-        match *self {
+    fn to_bools(self) -> (bool, bool) {
+        match self {
             Corner2::P00 => (false, false),
             Corner2::P01 => (false, true),
             Corner2::P11 => (true, true),
@@ -254,12 +252,12 @@ impl Into<V3> for Corner2 {
 impl Corner3 {
     // TODO come up with better approach than the bool tuples
 
-    pub fn offset(&self, dim_vec: V3, rot: R3) -> V3 {
+    pub fn offset(self, dimensions: V3, rot: R3) -> V3 {
         let v: V3 = self.to_owned().into();
-        rotate(rot, v.component_mul(&dim_vec))
+        rotate(rot, v.component_mul(&dimensions))
     }
 
-    pub fn is_high(&self, axis: Axis) -> bool {
+    pub fn is_high(self, axis: Axis) -> bool {
         let bools = self.to_bools();
         match axis {
             Axis::X => bools.0,
@@ -308,8 +306,8 @@ impl Corner3 {
         ]
     }
 
-    fn to_bools(&self) -> (bool, bool, bool) {
-        match *self {
+    fn to_bools(self) -> (bool, bool, bool) {
+        match self {
             Corner3::P000 => (false, false, false),
             Corner3::P010 => (false, true, false),
             Corner3::P110 => (true, true, false),
@@ -396,22 +394,22 @@ impl From<Axis> for Corner3 {
 }
 
 impl CubeFace {
-    pub fn is_high(&self) -> bool {
-        match *self {
+    pub fn is_high(self) -> bool {
+        match self {
             CubeFace::X0 | CubeFace::Y0 | CubeFace::Z0 => false,
             CubeFace::X1 | CubeFace::Y1 | CubeFace::Z1 => true,
         }
     }
 
-    pub fn axis(&self) -> Axis {
-        match *self {
+    pub fn axis(self) -> Axis {
+        match self {
             CubeFace::X0 | CubeFace::X1 => Axis::X,
             CubeFace::Y0 | CubeFace::Y1 => Axis::Y,
             CubeFace::Z0 | CubeFace::Z1 => Axis::Z,
         }
     }
-    pub fn corners(&self) -> (Corner3, Corner3) {
-        match *self {
+    pub fn corners(self) -> (Corner3, Corner3) {
+        match self {
             CubeFace::X0 => (Corner3::P000, Corner3::P011),
             CubeFace::X1 => (Corner3::P100, Corner3::P111),
             CubeFace::Y0 => (Corner3::P000, Corner3::P101),
@@ -441,19 +439,19 @@ impl Fraction {
         Ok(Fraction(value))
     }
 
-    pub fn unwrap(&self) -> f32 {
+    pub fn unwrap(self) -> f32 {
         self.0
     }
 
-    pub fn complement(&self) -> f32 {
+    pub fn complement(self) -> f32 {
         1. - self.unwrap()
     }
 
-    pub fn weighted_average(&self, a: f32, b: f32) -> f32 {
+    pub fn weighted_average(self, a: f32, b: f32) -> f32 {
         a * self.unwrap() + b * self.complement()
     }
 
-    pub fn weighted_midpoint(&self, a: P3, b: P3) -> P3 {
+    pub fn weighted_midpoint(self, a: P3, b: P3) -> P3 {
         // TODO there must be a better way to convert P3 to V3, right?
         let vec_b = b - P3::origin();
         a * self.unwrap() + vec_b * self.complement()
@@ -619,21 +617,21 @@ pub(crate) fn unwrap_rot_axis(rot: R3) -> Result<V3, ScadDotsError> {
 }
 
 impl ColorSpec {
-    pub fn name(&self) -> String {
-        match *self {
+    pub fn name(self) -> String {
+        match self {
             ColorSpec::Red => "red",
             ColorSpec::Green => "green",
         }.to_owned()
     }
-    pub fn rgb(&self) -> V3 {
-        match *self {
+    pub fn rgb(self) -> V3 {
+        match self {
             ColorSpec::Red => V3::new(1., 0., 0.),
             ColorSpec::Green => V3::new(0., 1., 0.),
         }.to_owned()
     }
-    pub fn rgba(&self) -> V4 {
+    pub fn rgba(self) -> V4 {
         let alpha = 0.5;
-        match *self {
+        match self {
             ColorSpec::Red => V4::new(1., 0., 0., alpha),
             ColorSpec::Green => V4::new(0., 1., 0., alpha),
         }.to_owned()

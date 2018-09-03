@@ -34,37 +34,22 @@ pub enum TriCorner {
 
 impl Triangle {
     pub fn new(spec: TriangleSpec) -> Result<Triangle, ScadDotsError> {
-        let shape = DotShape::Cylinder;
-        let b_spec = DotSpec {
-            pos: spec.center(TriCorner::B),
-            align: DotAlign::center_face(CubeFace::Z0),
-            size: spec.size,
-            rot: spec.rot,
-            shape,
-        };
-        let b = Dot::new(b_spec);
         let a_spec = DotSpec {
             pos: spec.center(TriCorner::A),
             align: DotAlign::center_face(CubeFace::Z0),
             size: spec.size,
             rot: spec.rot,
-            shape,
+            shape: DotShape::Cylinder,
         };
 
-        let a = Dot::new(a_spec);
+        let b_spec = a_spec.with_pos(spec.center(TriCorner::B));
+        let c_spec = a_spec.with_pos(spec.center(TriCorner::C));
 
-        let c_spec = DotSpec {
-            pos: spec.center(TriCorner::C),
-            align: DotAlign::center_face(CubeFace::Z0),
-            size: spec.size,
-            rot: spec.rot,
-            shape,
-        };
-        let c = Dot::new(c_spec);
-
-        // print!("ca: {}, ab: {}", spec.len(TriCorner::C), spec.len_ab());
-
-        Ok(Triangle { a: a, b: b, c: c })
+        Ok(Triangle {
+            a: Dot::new(a_spec),
+            b: Dot::new(b_spec),
+            c: Dot::new(c_spec),
+        })
     }
 
     pub fn mark(&self, spec: TriangleSpec) -> Result<Tree, ScadDotsError> {

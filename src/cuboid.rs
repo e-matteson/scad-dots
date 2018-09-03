@@ -156,12 +156,12 @@ impl CuboidAlign {
                     dot: dot_b,
                 },
             ) => Ok(CuboidAlign::Midpoint {
-                cuboid_a: cuboid_a,
-                dot_a: dot_a,
-                cuboid_b: cuboid_b,
-                dot_b: dot_b,
+                cuboid_a,
+                dot_a,
+                cuboid_b,
+                dot_b,
             }),
-            _ => return Err(ScadDotsError::Midpoint),
+            _ => Err(ScadDotsError::Midpoint),
         }
     }
 
@@ -176,14 +176,14 @@ impl CuboidAlign {
         v
     }
 
-    fn offset(&self, cuboid_dimensions: V3, dot_dimensions: V3, rot: R3) -> V3 {
+    fn offset(self, cuboid_dimensions: V3, dot_dimensions: V3, rot: R3) -> V3 {
         // TODO share code with RectAlign::offset()?
         let helper = |cuboid: C3, dot: C3| {
             dot.offset(dot_dimensions, rot)
                 + cuboid.offset(cuboid_dimensions, rot)
         };
 
-        match *self {
+        match self {
             CuboidAlign::Corner { cuboid, dot } => helper(cuboid, dot),
             CuboidAlign::Midpoint {
                 cuboid_a,
@@ -200,7 +200,7 @@ impl From<CuboidAlign> for RectAlign {
         match c {
             CuboidAlign::Corner { cuboid, dot } => RectAlign::Corner {
                 rect: cuboid.into(),
-                dot: dot,
+                dot,
             },
             CuboidAlign::Midpoint {
                 cuboid_a,
@@ -209,9 +209,9 @@ impl From<CuboidAlign> for RectAlign {
                 dot_b,
             } => RectAlign::Midpoint {
                 rect_a: cuboid_a.into(),
-                dot_a: dot_a,
+                dot_a,
                 rect_b: cuboid_b.into(),
-                dot_b: dot_b,
+                dot_b,
             },
         }
     }
@@ -455,8 +455,8 @@ impl CuboidSpecTrait for CuboidSpecChamferZHole {
 }
 
 impl CuboidShapes {
-    fn get(&self, upper_or_lower: C1) -> RectShapes {
-        match *self {
+    fn get(self, upper_or_lower: C1) -> RectShapes {
+        match self {
             CuboidShapes::Round => match upper_or_lower {
                 C1::P1 => RectShapes::Sphere,
                 C1::P0 => RectShapes::Cylinder,

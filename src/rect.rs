@@ -285,7 +285,7 @@ impl RectSpecTrait for RectSpec {
 
         let pos = origin + corner.offset(rect_dimensions, self.rot);
         let spec = DotSpec {
-            pos: pos,
+            pos,
             align: C3::P000.into(),
             rot: self.rot,
             size: self.size,
@@ -317,14 +317,12 @@ impl RectAlign {
                     dot: dot_b,
                 },
             ) => Ok(RectAlign::Midpoint {
-                rect_a: rect_a,
-                dot_a: dot_a,
-                rect_b: rect_b,
-                dot_b: dot_b,
+                rect_a,
+                dot_a,
+                rect_b,
+                dot_b,
             }),
-            _ => {
-                return Err(ScadDotsError::Midpoint);
-            }
+            _ => Err(ScadDotsError::Midpoint),
         }
     }
 
@@ -384,12 +382,12 @@ impl RectAlign {
         v
     }
 
-    fn offset(&self, dot_dimensions: V3, rect_dimensions: V3, rot: R3) -> V3 {
+    fn offset(self, dot_dimensions: V3, rect_dimensions: V3, rot: R3) -> V3 {
         let helper = |dot: C3, rect: C2| {
             dot.offset(dot_dimensions, rot) + rect.offset(rect_dimensions, rot)
         };
 
-        match *self {
+        match self {
             RectAlign::Corner { dot, rect } => helper(dot, rect),
             RectAlign::Midpoint {
                 dot_a,
@@ -402,8 +400,8 @@ impl RectAlign {
 }
 
 impl RectShapes {
-    pub fn get(&self, corner: C2) -> DotShape {
-        match *self {
+    pub fn get(self, corner: C2) -> DotShape {
+        match self {
             RectShapes::Custom { p00, p10, p11, p01 } => match corner {
                 C2::P00 => p00,
                 C2::P01 => p01,

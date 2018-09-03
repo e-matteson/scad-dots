@@ -24,8 +24,8 @@ pub enum RenderQuality {
 }
 
 impl RenderQuality {
-    pub fn detail(&self) -> i32 {
-        match *self {
+    pub fn detail(self) -> i32 {
+        match self {
             RenderQuality::Medium => 20,
             RenderQuality::High => 60,
             RenderQuality::Low => 5,

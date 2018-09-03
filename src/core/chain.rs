@@ -25,7 +25,7 @@ impl Snake {
         end: Dot,
         order: [Axis; 3],
     ) -> Result<Snake, ScadDotsError> {
-        if Snake::has_repeated_axes(&order) {
+        if Snake::has_repeated_axes(order) {
             return Err(ScadDotsError::Snake);
         }
         let mut dots = [Dot::default(); 4];
@@ -36,10 +36,10 @@ impl Snake {
         for (index, axis) in order.iter().enumerate() {
             dots[index + 1] = dots[index].copy_to_other_dim(end, *axis);
         }
-        Ok(Snake { dots: dots })
+        Ok(Snake { dots })
     }
 
-    fn has_repeated_axes(order: &[Axis; 3]) -> bool {
+    fn has_repeated_axes(order: [Axis; 3]) -> bool {
         let set: HashSet<_> = order.iter().collect();
         set.len() != order.len()
     }

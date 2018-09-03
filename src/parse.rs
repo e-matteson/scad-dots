@@ -19,9 +19,10 @@ pub fn scad_relative_eq(
 fn parse_scad(scad: &str) -> Result<ScadThing, ScadDotsError> {
     let out = parser(scad.as_bytes());
     if out.is_done() {
-        return Ok(out.unwrap().1);
+        Ok(out.unwrap().1)
+    } else {
+        Err(ScadDotsError::Parse)
     }
-    return Err(ScadDotsError::Parse);
 }
 
 type Double = (f32, f32);
@@ -196,7 +197,7 @@ impl ApproxEq for ScadThing {
         self.map_eq(
             other,
             EqMethod::Rel {
-                epsilon: epsilon,
+                epsilon,
                 max: max_relative,
             },
         )
@@ -211,14 +212,14 @@ impl ApproxEq for ScadThing {
         self.map_eq(
             other,
             EqMethod::Ulps {
-                epsilon: epsilon,
+                epsilon,
                 max: max_ulps,
             },
         )
     }
 }
 
-fn flatten(points: &Vec<Double>) -> Vec<f32> {
+fn flatten(points: &[Double]) -> Vec<f32> {
     let mut floats = Vec::new();
     for p in points {
         floats.extend(&[p.0, p.1]);
@@ -378,12 +379,12 @@ named!(
             >> children: many1!(scad_thing)
             >> tag!("}")
             >> (ScadThing::LinearExtrude {
-                height: height,
-                center: center,
-                convecity: convecity,
-                twist: twist,
-                slices: slices,
-                children: children,
+                height,
+                center,
+                convecity,
+                twist,
+                slices,
+                children,
             })
     ))
 );

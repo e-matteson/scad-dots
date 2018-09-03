@@ -183,8 +183,8 @@ fn name_to_path(name: &str, status: GoodOrBad) -> String {
 }
 
 impl GoodOrBad {
-    fn to_string(&self) -> String {
-        match *self {
+    fn to_string(self) -> String {
+        match self {
             GoodOrBad::Good => "good".into(),
             GoodOrBad::Bad => "bad".into(),
         }

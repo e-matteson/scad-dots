@@ -158,7 +158,7 @@ impl Dot {
         // Create a Dot whose bottom face is centered on that position.
         // Reset its rotation.
         Dot::new(DotSpec {
-            pos: pos,
+            pos,
             align: DotAlign::center_face(CubeFace::Z0),
             size: self.size,
             rot: R3::identity(),
@@ -193,8 +193,8 @@ impl Dot {
     /// Make a copy of the dot at the new position.
     pub fn translate_to(&self, pos: P3, align: DotAlign) -> Dot {
         let spec = DotSpec {
-            pos: pos,
-            align: align,
+            pos,
+            align,
             size: self.size,
             rot: self.rot,
             shape: self.shape,
@@ -289,7 +289,7 @@ impl Dot {
         count: usize,
         adjust_dot_rotations: bool,
     ) -> Result<Vec<Dot>, ScadDotsError> {
-        let axis = axis.unwrap_or(rotate(self.rot, Axis::Z));
+        let axis = axis.unwrap_or_else(|| rotate(self.rot, Axis::Z));
 
         let mut dots = Vec::new();
         for i in 0..count {
@@ -306,7 +306,7 @@ impl Dot {
                 pos: self.pos(DotAlign::centroid()) + offset,
                 align: DotAlign::centroid(),
                 size: self.size,
-                rot: rot,
+                rot,
                 shape: self.shape,
             });
 
@@ -383,12 +383,12 @@ impl DotAlign {
         DotAlign::Midpoint(a, b)
     }
 
-    pub fn offset(&self, dot_size: f32, rot: R3) -> V3 {
+    pub fn offset(self, dot_size: f32, rot: R3) -> V3 {
         let dot_spec = dot_size * V3::new(1., 1., 1.);
 
         let helper = |dot: C3| dot.offset(dot_spec, rot);
 
-        match *self {
+        match self {
             DotAlign::Corner(a) => helper(a),
             DotAlign::Midpoint(a, b) => (helper(a) + helper(b)) / 2.,
         }
@@ -504,9 +504,9 @@ pub fn mark(pos: P3, size: f32) -> Tree {
     // Put a little sphere at the given position, for debugging
     // TODO make it red
     Dot::new(DotSpec {
-        pos: pos,
+        pos,
+        size,
         align: DotAlign::centroid(),
-        size: size,
         rot: R3::identity(),
         shape: DotShape::Sphere,
     }).into()
