@@ -13,6 +13,9 @@ pub enum ScadDotsError {
     TestView,
     TestCreate,
     Parse,
+    /// For errors originating in some other crate that depends on this one
+    /// (probably when using the scad-dots test harness).
+    External(Box<Error>),
     Ratio(f32),
     Io(io::Error),
     Context {
@@ -25,7 +28,8 @@ pub trait ResultExt<T> {
     /// Convert the error type to a ScadDotsError, and add the context message around it.
     fn context(self, message: &str) -> Result<T, ScadDotsError>;
 
-    /// Like `context()` but take a closure containing a potentionally costly operation that will only be executed if there was an error.
+    /// Like `context()` but take a closure containing a potentionally costly
+    /// operation that will only be executed if there was an error.
     fn with_context<F>(self, message_creator: F) -> Result<T, ScadDotsError>
     where
         F: Fn() -> String;
@@ -106,6 +110,9 @@ impl fmt::Display for ScadDotsError {
                 "Created new expected testcase output instead of checking it, \
                  remember to change action back to Test."
             ),
+            ScadDotsError::External(err) => {
+                write!(f, "External error:\n{}", err)
+            }
             ScadDotsError::Parse => write!(f, "Failed to parse openscad code."),
             ScadDotsError::Context { message, cause } => {
                 write!(f, "{}\n  caused by: {}", message, cause)

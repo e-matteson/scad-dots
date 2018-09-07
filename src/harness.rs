@@ -54,11 +54,16 @@ where
 }
 
 // TODO let lib user control paths, somehow
-fn test_helper<F>(name: &str, action: Action, f: F) -> Result<(), ScadDotsError>
+fn test_helper<F>(
+    name: &str,
+    action: Action,
+    model_creator: F,
+) -> Result<(), ScadDotsError>
 where
     F: Fn() -> Result<Tree, ScadDotsError>,
 {
-    let tree = f()?;
+    let tree =
+        model_creator().context("failed to construct test case's model")?;
     match action {
         Action::PrintMedium => {
             let actual = render_model(&tree, RenderQuality::Medium)?;
