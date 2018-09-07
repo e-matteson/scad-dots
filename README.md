@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/e-matteson/scad-dots.svg?branch=master)](https://travis-ci.com/e-matteson/scad-dots)
+[![Build Status](https://travis-ci.com/e-matteson/scad-dots.svg?branch=master)](https://travis-ci.com/e-matteson/scad-dots) [![codecov](https://codecov.io/gh/e-matteson/scad-dots/branch/master/graph/badge.svg)](https://codecov.io/gh/e-matteson/scad-dots)
 
 # Scad Dots
 
