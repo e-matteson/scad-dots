@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/e-matteson/scad-dots.svg?branch=master)](https://travis-ci.com/e-matteson/scad-dots)
+
 # Scad Dots
 
 This library lets you build simple 3d models by "connecting the dots", and outputs them as OpenSCAD code.
