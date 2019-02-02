@@ -27,7 +27,7 @@ impl RenderQuality {
     pub fn detail(self) -> i32 {
         match self {
             RenderQuality::Medium => 20,
-            RenderQuality::High => 60,
+            RenderQuality::High => 49,
             RenderQuality::Low => 5,
         }
     }

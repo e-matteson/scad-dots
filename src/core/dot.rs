@@ -139,15 +139,15 @@ impl Dot {
     }
 
     /// Like `Dot::drop()`, but more general: the new dot will be dropped in the
-    /// given direction, instead of straight down. The new dot's rotation will
-    /// still be reset to sit flat on the z-plane, regardless of direction.
+    /// given direction line (instead of straight down) until its z coordinate
+    /// is equal to bottom_z. The new dot's rotation will still be reset to sit
+    /// flat on the z-plane, regardless of direction.
     pub fn drop_along(
         &self,
         direction: V3,
         bottom_z: f32,
         shape: Option<DotShape>,
     ) -> Self {
-        // Get the position of the center of the dot
         let pos = translate_p3_along_until(
             self.pos(DotAlign::centroid()),
             direction,

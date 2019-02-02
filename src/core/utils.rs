@@ -91,6 +91,13 @@ impl Axis {
         // TODO refactor stuff to use this
         pos[self.index()]
     }
+
+    /// Create a vector with the given coordinate for this Axis, and zeros for the rest
+    pub fn v3(self, coordinate: f32) -> V3 {
+        let mut vector = V3::zeros();
+        vector[self.index()] = coordinate;
+        vector
+    }
 }
 
 // TODO why did the From<> versions break after the nalgebra 0.13 update?
