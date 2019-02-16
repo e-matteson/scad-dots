@@ -312,10 +312,8 @@ fn scad_equality() {
                  }
 ";
 
-    assert!(
-        !scad_relative_eq(scad1, scad2, 0.00001)
-            .expect("failed to check equality")
-    );
+    assert!(!scad_relative_eq(scad1, scad2, 0.00001)
+        .expect("failed to check equality"));
 }
 
 #[test]
@@ -448,7 +446,7 @@ fn dot_cyl() {
             pos: P3::origin(),
             align: C3::P000.into(),
             size: 2.0,
-            rot: axis_radians(V3::x_axis().unwrap(), PI / 4.),
+            rot: axis_radians(V3::x_axis().into_inner(), PI / 4.),
             shape: DotShape::Cylinder,
         });
         Ok(n.into())
@@ -676,7 +674,7 @@ fn spiral_cuboid() {
             y_length: 3.0,
             z_length: 4.0,
             size: 0.5,
-            rot: axis_radians(V3::x_axis().unwrap(), PI / 8.),
+            rot: axis_radians(V3::x_axis().into_inner(), PI / 8.),
             shapes: CuboidShapes::Cube,
         })?;
         Ok(union![
@@ -729,7 +727,7 @@ fn cuboid_corners() {
             x_length: 10.0,
             z_length: 5.0,
             size: 2.,
-            rot: axis_radians(V3::x_axis().unwrap(), PI / 8.),
+            rot: axis_radians(V3::x_axis().into_inner(), PI / 8.),
             shapes: CuboidShapes::Cube,
         })?;
 

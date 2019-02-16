@@ -1,4 +1,4 @@
-use scad_generator::*;
+use scad::*;
 
 use core::utils::{
     radians_to_degrees, rotate, unwrap_rot_axis, Corner3 as C3, P2, P3, V2, V3,
@@ -248,9 +248,9 @@ impl Render for Extrusion {
         let mut params = LinExtrudeParams::default();
         params.height = self.thickness;
         Ok(scad!(
-            Translate(self.scad_translation());{
-                scad!(LinearExtrude(params);{
-                    scad!( Polygon(PolygonParameters::new(points)))
-                })}))
+        Translate(self.scad_translation());{
+            scad!(LinearExtrude(params);{
+                scad!( Polygon(PolygonParameters::new(points)))
+            })}))
     }
 }

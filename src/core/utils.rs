@@ -107,9 +107,9 @@ impl Axis {
 impl Into<V3> for Axis {
     fn into(self) -> V3 {
         match self {
-            Axis::X => V3::x_axis().unwrap(),
-            Axis::Y => V3::y_axis().unwrap(),
-            Axis::Z => V3::z_axis().unwrap(),
+            Axis::X => V3::x_axis().into_inner(),
+            Axis::Y => V3::y_axis().into_inner(),
+            Axis::Z => V3::z_axis().into_inner(),
         }
     }
 }
@@ -219,7 +219,7 @@ impl Corner2 {
             Axis::Y => bools.1,
             Axis::Z => {
                 return Err(ScadDotsError::Args
-                    .context("The Z value of a Corner2 is not defined"))
+                    .context("The Z value of a Corner2 is not defined"));
             }
         })
     }
@@ -611,7 +611,7 @@ pub fn radial_offset(
 
 pub(crate) fn unwrap_rot_axis(rot: R3) -> Result<V3, ScadDotsError> {
     if let Some(unit) = rot.axis() {
-        Ok(unit.unwrap())
+        Ok(unit.into_inner())
     } else if rot.angle() == 0.0 {
         // TODO approx equal?
         // Shouldn't matter what axis we use here, since the angle is 0
@@ -626,19 +626,22 @@ impl ColorSpec {
         match self {
             ColorSpec::Red => "red",
             ColorSpec::Green => "green",
-        }.to_owned()
+        }
+        .to_owned()
     }
     pub fn rgb(self) -> V3 {
         match self {
             ColorSpec::Red => V3::new(1., 0., 0.),
             ColorSpec::Green => V3::new(0., 1., 0.),
-        }.to_owned()
+        }
+        .to_owned()
     }
     pub fn rgba(self) -> V4 {
         let alpha = 0.5;
         match self {
             ColorSpec::Red => V4::new(1., 0., 0., alpha),
             ColorSpec::Green => V4::new(0., 1., 0., alpha),
-        }.to_owned()
+        }
+        .to_owned()
     }
 }

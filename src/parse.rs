@@ -1,6 +1,6 @@
 use std;
 
-use approx::ApproxEq;
+use approx::{AbsDiffEq, RelativeEq};
 use errors::ScadDotsError;
 use nom::{digit, float};
 
@@ -28,7 +28,7 @@ fn parse_scad(scad: &str) -> Result<ScadThing, ScadDotsError> {
 type Double = (f32, f32);
 type Triple = (f32, f32, f32);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum ScadThing {
     Difference(Vec<ScadThing>),
     Union(Vec<ScadThing>),
@@ -55,20 +55,20 @@ enum ScadThing {
 #[derive(Debug, Clone, Copy)]
 enum EqMethod {
     Rel { epsilon: f32, max: f32 },
-    Ulps { epsilon: f32, max: u32 },
+    Abs { epsilon: f32 },
 }
 
 impl EqMethod {
     fn is_eq(&self, a: f32, b: f32) -> bool {
         match *self {
             EqMethod::Rel { epsilon, max } => a.relative_eq(&b, epsilon, max),
-            EqMethod::Ulps { epsilon, max } => a.ulps_eq(&b, epsilon, max),
+            EqMethod::Abs { epsilon } => a.abs_diff_eq(&b, epsilon),
         }
     }
 }
 
 impl ScadThing {
-    pub fn map_eq(&self, other: &Self, method: EqMethod) -> bool {
+    fn map_eq(&self, other: &Self, method: EqMethod) -> bool {
         if !self.variant_eq(other) {
             println!("\nNOT EQUAL: variants\n");
             return false;
@@ -173,19 +173,21 @@ impl ScadThing {
     }
 }
 
-impl ApproxEq for ScadThing {
+impl AbsDiffEq for ScadThing {
     type Epsilon = f32;
 
     fn default_epsilon() -> Self::Epsilon {
         f32::default_epsilon()
     }
 
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.map_eq(other, EqMethod::Abs { epsilon })
+    }
+}
+
+impl RelativeEq for ScadThing {
     fn default_max_relative() -> Self::Epsilon {
         f32::default_max_relative()
-    }
-
-    fn default_max_ulps() -> u32 {
-        f32::default_max_ulps()
     }
 
     fn relative_eq(
@@ -199,21 +201,6 @@ impl ApproxEq for ScadThing {
             EqMethod::Rel {
                 epsilon,
                 max: max_relative,
-            },
-        )
-    }
-
-    fn ulps_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_ulps: u32,
-    ) -> bool {
-        self.map_eq(
-            other,
-            EqMethod::Ulps {
-                epsilon,
-                max: max_ulps,
             },
         )
     }

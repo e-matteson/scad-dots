@@ -8,8 +8,7 @@ extern crate nalgebra;
 #[macro_use]
 extern crate nom;
 
-#[macro_use]
-extern crate scad_generator;
+extern crate scad;
 
 #[macro_use]
 extern crate approx;

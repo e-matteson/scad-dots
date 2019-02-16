@@ -6,9 +6,9 @@ use errors::ScadDotsError;
 /// Extrude the given perimeter into the z dimension. The bottom surface of the extrusion will be on the z=`bottom_z` plane, and have the given z `thickness`.
 #[derive(Debug, Clone)]
 pub struct Extrusion {
-    pub(crate) perimeter: Vec<P2>,
-    pub(crate) bottom_z: f32,
-    pub(crate) thickness: f32,
+    pub perimeter: Vec<P2>,
+    pub bottom_z: f32,
+    pub thickness: f32,
 }
 
 impl Extrusion {
