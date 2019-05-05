@@ -26,6 +26,7 @@ pub enum Action {
     Preview,
     PrintMedium,
     PrintHigh,
+    UpdatePreview,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -83,6 +84,10 @@ where
             }
             view_in_openscad(&paths)?;
             return Err(ScadDotsError::TestView);
+        }
+        Action::UpdatePreview => {
+            let actual = render_model(&tree, RenderQuality::Low)?;
+            save_temp_file("actual", name, &actual)?;
         }
         Action::Preview => {
             let actual = render_model(&tree, RenderQuality::Low)?;
