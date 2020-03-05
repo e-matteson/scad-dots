@@ -76,6 +76,14 @@ pub enum ColorSpec {
     Green,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Plane {
+    // TODO use more general equation, don't require it to intersect z
+    pub z_offset: f32,
+    pub xz_slope: f32,
+    pub yz_slope: f32,
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Axis {
@@ -609,7 +617,7 @@ pub fn radial_offset(
     Ok(z_to_real_axis * rot_around_z * radius_vec)
 }
 
-pub(crate) fn unwrap_rot_axis(rot: R3) -> Result<V3, ScadDotsError> {
+pub fn unwrap_rot_axis(rot: R3) -> Result<V3, ScadDotsError> {
     if let Some(unit) = rot.axis() {
         Ok(unit.into_inner())
     } else if rot.angle() == 0.0 {
@@ -643,5 +651,27 @@ impl ColorSpec {
             ColorSpec::Green => V4::new(0., 1., 0., alpha),
         }
         .to_owned()
+    }
+}
+
+impl Plane {
+    pub fn new_z0() -> Self {
+        Plane {
+            z_offset: 0.,
+            xz_slope: 0.,
+            yz_slope: 0.,
+        }
+    }
+
+    pub fn z(&self, x: f32, y: f32) -> f32 {
+        self.z_offset + self.xz_slope * x + self.yz_slope * y
+    }
+
+    pub fn normal(&self) -> V3 {
+        V3::new(self.xz_slope, self.yz_slope, 1.)
+    }
+
+    pub fn rot(&self) -> R3 {
+        rotation_between(self.normal(), Axis::Z).unwrap_or(R3::identity())
     }
 }
