@@ -79,6 +79,9 @@ impl TreeOperator {
             TreeOperator::Hull(_) => scad!(Hull),
             TreeOperator::Diff(_) => scad!(Difference),
             TreeOperator::Intersect(_) => scad!(Intersection),
+            TreeOperator::Rotate(degrees, axis, _) => {
+                scad!(Rotate(*degrees, *axis))
+            }
             TreeOperator::Color(color, _) => scad!(Color(color.rgb())),
             TreeOperator::Mirror(normal, _) => scad!(Mirror(*normal)),
         }
@@ -90,6 +93,7 @@ impl TreeOperator {
             TreeOperator::Union(ref v)
             | TreeOperator::Hull(ref v)
             | TreeOperator::Diff(ref v)
+            | TreeOperator::Rotate(_, _, ref v)
             | TreeOperator::Intersect(ref v) => v.clone(),
 
             TreeOperator::Color(_, ref tree)

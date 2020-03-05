@@ -26,6 +26,7 @@ pub enum TreeOperator {
     /// Subtract all following elements from the first
     Diff(Vec<Tree>),
     Intersect(Vec<Tree>),
+    Rotate(f32, V3, Vec<Tree>),
     Color(ColorSpec, Box<Tree>),
     Mirror(V3, Box<Tree>), // Mirrors across plane with the given normal vec
 }
@@ -113,6 +114,17 @@ impl Tree {
         T: Into<Self>,
     {
         Tree::Operator(TreeOperator::Intersect(
+            tree_like.into_iter().map(|x| x.into()).collect(),
+        ))
+    }
+
+    pub fn rotate<T>(degrees: f32, axis: V3, tree_like: Vec<T>) -> Self
+    where
+        T: Into<Self>,
+    {
+        Tree::Operator(TreeOperator::Rotate(
+            degrees,
+            axis,
             tree_like.into_iter().map(|x| x.into()).collect(),
         ))
     }

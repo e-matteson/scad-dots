@@ -440,6 +440,33 @@ fn dot_rot() {
 }
 
 #[test]
+fn dot_rot_operator() {
+    check_model("dot_rot_operator", Action::Test, || {
+        let axis = V3::new(1., 1., 0.);
+        let degrees = 30.;
+
+        let _dot1 = Dot::new(DotSpec {
+            pos: P3::new(0., 0., 0.),
+            align: C3::P111.into(),
+            size: 2.0,
+            rot: axis_degrees(axis, degrees),
+            shape: DotShape::Cube,
+        });
+        let dot2 = Dot::new(DotSpec {
+            pos: P3::new(0., 0., 0.),
+            align: C3::P111.into(),
+            size: 2.0,
+            rot: R3::identity(),
+            shape: DotShape::Cube,
+        });
+
+        let _rendered1: Tree = _dot1.into();
+        let rendered2 = Tree::rotate(degrees, axis, vec![dot2]);
+        Ok(rendered2)
+    })
+}
+
+#[test]
 fn dot_cyl() {
     check_model("dot_cyl", Action::Test, || {
         let n = Dot::new(DotSpec {
