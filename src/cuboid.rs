@@ -1,8 +1,8 @@
 use core::utils::{
     midpoint, Axis, Corner1 as C1, Corner2 as C2, Corner3 as C3, CubeFace,
-    Fraction, P3, R3, V3,
+    Fraction, Plane, P3, R3, V3,
 };
-use core::{mark, Dot, DotShape, MapDots, MinMaxCoord, Tree};
+use core::{chain_loop, mark, Dot, DotShape, MapDots, MinMaxCoord, Tree};
 use errors::ScadDotsError;
 use post::{Post, PostLink};
 use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec};
@@ -12,6 +12,15 @@ use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec};
 pub struct Cuboid {
     pub top: Rect,
     pub bot: Rect,
+}
+
+#[derive(Debug, Clone, Copy, MapDots, MinMaxCoord)]
+pub struct DroppedCuboid {
+    pub cuboid: Cuboid,
+    pub p00: Dot,
+    pub p10: Dot,
+    pub p01: Dot,
+    pub p11: Dot,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -349,6 +358,16 @@ impl Cuboid {
         }
     }
 
+    pub fn drop_to_plane(&self, plane: Plane) -> DroppedCuboid {
+        DroppedCuboid {
+            cuboid: *self,
+            p00: self.dot(C3::P000).drop_to_plane(plane, None),
+            p01: self.dot(C3::P010).drop_to_plane(plane, None),
+            p10: self.dot(C3::P100).drop_to_plane(plane, None),
+            p11: self.dot(C3::P110).drop_to_plane(plane, None),
+        }
+    }
+
     pub fn mark_corners(&self) -> Tree {
         // for debugging
         let mut marks = Vec::new();
@@ -493,5 +512,97 @@ impl From<DotShape> for CuboidShapes {
             DotShape::Sphere => CuboidShapes::Sphere,
             DotShape::Cylinder => CuboidShapes::Cylinder,
         }
+    }
+}
+
+impl DroppedCuboid {
+    /// Return a vertical post between the upper and lower Dots at the given xy corner.
+    pub fn vertical_post(&self, corner: C2) -> Post {
+        // TODO rename to get_vertical_post or something, really unclear
+        let post = Post {
+            top: self.cuboid.top.dot(corner),
+            bot: self.dropped_dot(corner),
+        };
+        // TODO this might not create a valid post if the rotations are different...
+        assert_eq!(post.top.rot, post.bot.rot);
+        post
+    }
+
+    pub fn bottoms(&self) -> [Dot; 4] {
+        [self.p00, self.p10, self.p11, self.p01]
+    }
+
+    pub fn centroid(&self) -> P3 {
+        // TODO replace with MinMaxCoord
+        let top_center =
+            self.cuboid.pos(CuboidAlign::center_face(CubeFace::Z1));
+        let bot_center = midpoint(
+            midpoint(self.p00.pos(C3::P000), self.p11.pos(C3::P110)),
+            midpoint(self.p01.pos(C3::P010), self.p10.pos(C3::P100)),
+        );
+        midpoint(top_center, bot_center)
+    }
+
+    pub fn dropped_dot(&self, corner: C2) -> Dot {
+        match corner {
+            C2::P00 => self.p00,
+            C2::P01 => self.p01,
+            C2::P10 => self.p10,
+            C2::P11 => self.p11,
+        }
+    }
+
+    pub fn link(&self, style: CuboidLink) -> Result<Tree, ScadDotsError> {
+        Ok(match style {
+            CuboidLink::Solid => hull![
+                self.cuboid.top.link(RectLink::Dots)?,
+                self.cuboid.bot.link(RectLink::Dots)?,
+                self.p00,
+                self.p10,
+                self.p01,
+                self.p11,
+            ],
+            CuboidLink::Frame => union![
+                self.cuboid.top.link(RectLink::Frame)?,
+                chain_loop(&[self.p00, self.p01, self.p11, self.p10,])?,
+                self.vertical_post(C2::P00).link(PostLink::Solid),
+                self.vertical_post(C2::P10).link(PostLink::Solid),
+                self.vertical_post(C2::P11).link(PostLink::Solid),
+                self.vertical_post(C2::P01).link(PostLink::Solid),
+            ],
+            CuboidLink::Dots => union![
+                self.cuboid.top.link(RectLink::Dots)?,
+                self.cuboid.bot.link(RectLink::Dots)?,
+                self.p00,
+                self.p10,
+                self.p01,
+                self.p11,
+            ],
+            CuboidLink::Face(face) => match face {
+                CubeFace::Z1 => self.cuboid.link(CuboidLink::Face(face))?,
+                CubeFace::Z0 => hull![self.p00, self.p01, self.p10, self.p11],
+                CubeFace::X0 => hull![
+                    self.cuboid.link(CuboidLink::Face(face))?,
+                    self.p00,
+                    self.p01
+                ],
+                CubeFace::X1 => hull![
+                    self.cuboid.link(CuboidLink::Face(face))?,
+                    self.p10,
+                    self.p11
+                ],
+                CubeFace::Y0 => hull![
+                    self.cuboid.link(CuboidLink::Face(face))?,
+                    self.p00,
+                    self.p10
+                ],
+                CubeFace::Y1 => hull![
+                    self.cuboid.link(CuboidLink::Face(face))?,
+                    self.p01,
+                    self.p11
+                ],
+            },
+            _ => unimplemented!(),
+        })
     }
 }

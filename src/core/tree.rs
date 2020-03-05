@@ -1,4 +1,4 @@
-use core::utils::{ColorSpec, V3};
+use core::utils::{ColorSpec, Plane, V3};
 use core::{Cylinder, Dot, DotShape, Extrusion};
 
 #[derive(Debug, Clone)]
@@ -166,12 +166,8 @@ where
 // TODO use intra-docs link when that works.
 
 /// Call `.drop(bottom_z, shape)` on each of the given Dots. Return the hull of all the original dots and all the dropped dots.
-pub fn drop_solid(
-    dots: &[Dot],
-    bottom_z: f32,
-    shape: Option<DotShape>,
-) -> Tree {
-    let dropped_dots = dots.iter().map(|d| d.drop(bottom_z, shape));
+pub fn drop_solid(dots: &[Dot], plane: Plane, shape: Option<DotShape>) -> Tree {
+    let dropped_dots = dots.iter().map(|d| d.drop_to_plane(plane, shape));
     let all_dots: Vec<_> =
         dots.into_iter().cloned().chain(dropped_dots).collect();
     Tree::hull(all_dots)

@@ -1,5 +1,5 @@
 use core::utils::{
-    midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, P3, R3, V3,
+    midpoint, Axis, Corner2 as C2, Corner3 as C3, CubeFace, Plane, P3, R3, V3,
 };
 use core::{
     chain_loop, drop_solid, mark, Dot, DotShape, DotSpec, MapDots, MinMaxCoord,
@@ -145,8 +145,8 @@ impl Rect {
         self.edge(axis).norm()
     }
 
-    pub fn drop_solid(&self, bottom_z: f32, shape: Option<DotShape>) -> Tree {
-        drop_solid(&self.dots(), bottom_z, shape)
+    pub fn drop_solid(&self, plane: Plane, shape: Option<DotShape>) -> Tree {
+        drop_solid(&self.dots(), plane, shape)
     }
 
     /// For debugging. Return the union of 32 small spheres placed at each
@@ -279,9 +279,8 @@ impl RectSpecTrait for RectSpec {
         let dot_dimensions = V3::new(self.size, self.size, self.size);
         let rect_dimensions =
             V3::new(self.x_length - self.size, self.y_length - self.size, 0.);
-        let origin =
-            self.pos
-                - self.align.offset(dot_dimensions, rect_dimensions, self.rot);
+        let origin = self.pos
+            - self.align.offset(dot_dimensions, rect_dimensions, self.rot);
 
         let pos = origin + corner.offset(rect_dimensions, self.rot);
         let spec = DotSpec {

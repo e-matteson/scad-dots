@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use core::utils::{
     axis_radians, map_float, radial_offset, radians_to_degrees, rotate,
     translate_p3_along_until, unwrap_rot_axis, Axis, Corner3 as C3, CubeFace,
-    P2, P3, R3, V3,
+    Plane, P2, P3, R3, V3,
 };
 
 use core::{Snake, Tree};
@@ -164,6 +164,12 @@ impl Dot {
             rot: R3::identity(),
             shape: shape.unwrap_or(self.shape),
         })
+    }
+
+    pub fn drop_to_plane(&self, plane: Plane, shape: Option<DotShape>) -> Self {
+        let pos = self.pos(DotAlign::center_face(CubeFace::Z0));
+        let z = plane.z(pos.x, pos.y);
+        self.drop(z, shape)
     }
 
     pub fn translate(&self, offset: V3) -> Self {
@@ -509,5 +515,6 @@ pub fn mark(pos: P3, size: f32) -> Tree {
         align: DotAlign::centroid(),
         rot: R3::identity(),
         shape: DotShape::Sphere,
-    }).into()
+    })
+    .into()
 }
