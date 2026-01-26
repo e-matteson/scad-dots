@@ -234,7 +234,7 @@ fn map_cuboid() {
         })?;
         let p2 = p1.map_translate(V3::new(0., -10., 0.));
         let p3 = p1.map_rotate(axis_radians(Axis::Z, -PI / 8.));
-        let p4 = p1.map(&|d: &Dot| {
+        let p4 = p1.map_dots(&|d: &Dot| {
             d.translate(V3::new(20., 0., 0.))
                 .rotate(axis_radians(Axis::Z, -PI / 8.))
         });

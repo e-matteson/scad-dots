@@ -46,10 +46,10 @@ pub enum DotShape {
 /// It can be derived using scad-dots-derive crate.
 pub trait MapDots: Sized {
     // Can be derived using scad-dots-derive crate
-    fn map(&self, f: &Fn(&Dot) -> Dot) -> Self;
+    fn map_dots(&self, f: &Fn(&Dot) -> Dot) -> Self;
 
     fn map_translate(&self, offset: V3) -> Self {
-        self.map(&|d: &Dot| d.translate(offset))
+        self.map_dots(&|d: &Dot| d.translate(offset))
     }
 
     fn map_translate_z(&self, z_offset: f32) -> Self {
@@ -57,7 +57,7 @@ pub trait MapDots: Sized {
     }
 
     fn map_rotate(&self, rot: R3) -> Self {
-        self.map(&|d: &Dot| d.rotate(rot))
+        self.map_dots(&|d: &Dot| d.rotate(rot))
     }
 }
 
@@ -408,7 +408,7 @@ impl From<C3> for DotAlign {
 }
 
 impl MapDots for Dot {
-    fn map(&self, f: &Fn(&Dot) -> Dot) -> Dot {
+    fn map_dots(&self, f: &Fn(&Dot) -> Dot) -> Dot {
         f(self)
     }
 }
@@ -417,12 +417,12 @@ impl<T> MapDots for [T; 4]
 where
     T: MapDots,
 {
-    fn map(&self, f: &Fn(&Dot) -> Dot) -> Self {
+    fn map_dots(&self, f: &Fn(&Dot) -> Dot) -> Self {
         [
-            self[0].map(f),
-            self[1].map(f),
-            self[2].map(f),
-            self[3].map(f),
+            self[0].map_dots(f),
+            self[1].map_dots(f),
+            self[2].map_dots(f),
+            self[3].map_dots(f),
         ]
     }
 }
