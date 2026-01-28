@@ -153,7 +153,13 @@ fn render_model(
 
 fn save_file(path: &str, data: &str) -> Result<(), ScadDotsError> {
     println!("Writing to: {}", path);
-    let mut f = File::create(path)?;
+
+    // Ensure parent directory exists
+    let path_buf: PathBuf = path.into();
+    let prefix = path_buf.parent().unwrap();
+    std::fs::create_dir_all(prefix).unwrap();
+
+    let mut f = File::create(path_buf)?;
     f.write_all(data.as_bytes())?;
     Ok(())
 }
