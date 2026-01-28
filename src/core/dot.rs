@@ -427,6 +427,19 @@ where
     }
 }
 
+impl<T> MapDots for Option<T>
+where
+    T: MapDots,
+{
+    fn map_dots(&self, f: &Fn(&Dot) -> Dot) -> Self {
+        if let Some(inner) = self{
+            Some(inner.map_dots(f))
+        } else {
+            None
+        }
+    }
+}
+
 impl MinMaxCoord for Dot {
     fn all_coords(&self, axis: Axis) -> Vec<f32> {
         C3::all()
@@ -478,6 +491,19 @@ where
             v.extend(thing.all_coords(axis))
         }
         v
+    }
+}
+
+impl<T> MinMaxCoord for Option<T>
+where
+    T: MinMaxCoord,
+{
+    fn all_coords(&self, axis: Axis) -> Vec<f32> {
+        if let Some(inner) = self{
+            inner.all_coords(axis)
+        } else {
+            Vec::new()
+        }
     }
 }
 
