@@ -34,8 +34,8 @@ pub enum TreeOperator {
 #[macro_export]
 macro_rules! union {
     ( $( $tree_like:expr),* $(,)* ) => {
-        Tree::union(
-            vec![ $(Tree::from($tree_like),)* ]
+        $crate::core::Tree::union(
+            vec![ $($crate::core::Tree::from($tree_like),)* ]
         )
     }
 }
@@ -43,8 +43,8 @@ macro_rules! union {
 #[macro_export]
 macro_rules! hull {
     ( $( $tree_like:expr),* $(,)* ) => {
-        Tree::hull(
-            vec![ $(Tree::from($tree_like),)* ]
+        $crate::core::Tree::hull(
+            vec![ $($crate::core::Tree::from($tree_like),)* ]
         )
     }
 }
@@ -52,8 +52,8 @@ macro_rules! hull {
 #[macro_export]
 macro_rules! diff {
     ( $( $tree_like:expr),* $(,)* ) => {
-        Tree::diff(
-            vec![ $(Tree::from($tree_like),)* ]
+        $crate::core::Tree::diff(
+            vec![ $($crate::core::Tree::from($tree_like),)* ]
         )
     }
 }
@@ -61,8 +61,8 @@ macro_rules! diff {
 #[macro_export]
 macro_rules! intersect {
     ( $( $tree_like:expr),* $(,)* ) => {
-        Tree::intersect(
-            vec![ $(Tree::from($tree_like),)* ]
+        $crate::core::Tree::intersect(
+            vec![ $($crate::core::Tree::from($tree_like),)* ]
         )
     }
 }
@@ -70,14 +70,14 @@ macro_rules! intersect {
 #[macro_export]
 macro_rules! mirror {
     ($normal:expr, $tree_like:expr $(,)* ) => {
-        Tree::mirror($normal, Tree::from($tree_like))
+        $crate::core::Tree::mirror($normal, $crate::core::Tree::from($tree_like))
     };
 }
 
 #[macro_export]
 macro_rules! red {
     ($tree_like:expr $(,)* ) => {
-        Tree::color(ColorSpec::Red, Tree::from($tree_like))
+        $crate::core::Tree::color($crate::utils::ColorSpec::Red, $crate::core::Tree::from($tree_like))
     };
 }
 
