@@ -15,7 +15,7 @@ pub enum ScadDotsError {
     Parse,
     /// For errors originating in some other crate that depends on this one
     /// (probably when using the scad-dots test harness).
-    External(Box<Error>),
+    External(Box<dyn Error>),
     Ratio(f32),
     Io(io::Error),
     Context {
@@ -70,7 +70,7 @@ impl ScadDotsError {
 }
 
 impl Error for ScadDotsError {
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         match self {
             ScadDotsError::Context { ref cause, .. } => Some(cause),
             ScadDotsError::Io(ref cause) => Some(cause),

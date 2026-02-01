@@ -124,13 +124,20 @@ fn change_process_group() -> Result<(), io::Error> {
 }
 
 fn view_in_openscad(paths: &[String]) -> Result<(), ScadDotsError> {
-    //  TODO only do before_exec for linux
-    // https://doc.rust-lang.org/reference/attributes.html#conditional-compilation
-    Command::new("openscad")
-        .args(paths)
-        .before_exec(change_process_group)
-        .spawn()
-        .context("failed to run openscad viewer")?;
+    if cfg!(target_os = "linux") {
+        unsafe {
+            Command::new("openscad")
+                .args(paths)
+                .pre_exec(change_process_group)
+                .spawn()
+                .context("failed to run openscad viewer")?;
+        }
+    } else {
+        Command::new("openscad")
+            .args(paths)
+            .spawn()
+            .context("failed to run openscad viewer")?;
+    };
     Ok(())
 }
 
@@ -168,7 +175,7 @@ fn save_temp_file(
     id: &str,
     test_name: &str,
     code: &str,
-) -> Result<(String), ScadDotsError> {
+) -> Result<String, ScadDotsError> {
     let path = format!("tests/tmp/{}_{}.scad", id, test_name);
     save_file(&path, code).context("failed to save temporary .scad file")?;
     Ok(path)
