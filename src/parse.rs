@@ -2,7 +2,7 @@ use std;
 
 use approx::{AbsDiffEq, RelativeEq};
 use errors::ScadDotsError;
-use nom::{digit, float};
+use nom::{digit, float, IResult};
 
 pub fn scad_relative_eq(
     a: &str,
@@ -17,11 +17,23 @@ pub fn scad_relative_eq(
 }
 
 fn parse_scad(scad: &str) -> Result<ScadThing, ScadDotsError> {
-    let out = parser(scad.as_bytes());
-    if out.is_done() {
-        Ok(out.unwrap().1)
-    } else {
-        Err(ScadDotsError::Parse)
+    match parser(scad.as_bytes()) {
+        IResult::Done(_, out) => Ok(out),
+        IResult::Incomplete(_) => {
+            Err(ScadDotsError::Parse)
+        }
+        IResult::Error(_err) => {
+            // match _err {
+            //     nom::Err::Code(kind) => println!("code, {:?}",kind),
+            //     nom::Err::Node(kind, other_errors) => println!("node, {:?}, {:?}", kind, other_errors),
+            //     nom::Err::Position(kind, pos) => {
+            //         println!("position, {:?}, {:?}", kind, pos);
+            //         println!("{}", std::str::from_utf8(pos).unwrap());
+            //     },
+            //     nom::Err::NodePosition(kind, pos, other_errors) => println!("node position, {:?}, {:?}, {:?}", kind, pos, other_errors),
+            // }
+            Err(ScadDotsError::Parse)
+        }
     }
 }
 
@@ -31,6 +43,7 @@ type Triple = (f32, f32, f32);
 #[derive(Debug, Clone, PartialEq)]
 enum ScadThing {
     Difference(Vec<ScadThing>),
+    Intersection(Vec<ScadThing>),
     Union(Vec<ScadThing>),
     Hull(Vec<ScadThing>),
     Translate(Triple, Vec<ScadThing>),
@@ -120,6 +133,7 @@ impl ScadThing {
             | ScadThing::Union(..)
             | ScadThing::Hull(..)
             | ScadThing::Difference(..)
+            | ScadThing::Intersection(..)
             | ScadThing::Mirror(..)
             | ScadThing::Cube(..)
             | ScadThing::Sphere(..)
@@ -150,6 +164,7 @@ impl ScadThing {
                 v
             }
             ScadThing::Difference(_)
+            | ScadThing::Intersection(_)
             | ScadThing::Union(_)
             | ScadThing::Hull(_) => Vec::new(),
         }
@@ -163,6 +178,7 @@ impl ScadThing {
             | ScadThing::Mirror(_, ref children)
             | ScadThing::Hull(ref children)
             | ScadThing::Difference(ref children)
+            | ScadThing::Intersection(ref children)
             | ScadThing::LinearExtrude { ref children, .. }
             | ScadThing::Union(ref children) => children.to_owned(),
             ScadThing::Cube(..)
@@ -229,6 +245,7 @@ named!(
             | cylinder
             | union
             | difference
+            | intersection
             | hull
             | translate
             | rotate
@@ -268,6 +285,18 @@ named!(
             >> children: many1!(scad_thing)
             >> tag!("}")
             >> (ScadThing::Difference(children))
+    ))
+);
+
+named!(
+    intersection<ScadThing>,
+    ws!(do_parse!(
+        tag!("intersection")
+            >> tag!("()")
+            >> tag!("{")
+            >> children: many1!(scad_thing)
+            >> tag!("}")
+            >> (ScadThing::Intersection(children))
     ))
 );
 
