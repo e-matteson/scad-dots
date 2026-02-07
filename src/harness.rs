@@ -43,6 +43,7 @@ pub fn preview_model(tree: &Tree) -> Result<(), ScadDotsError> {
     view_in_openscad(&[path])
 }
 
+#[track_caller]
 pub fn check_model<F>(name: &str, action: Action, f: F)
 where
     F: Fn() -> Result<Tree, ScadDotsError>,
@@ -54,6 +55,7 @@ where
 }
 
 // TODO let lib user control paths, somehow
+#[track_caller]
 fn test_helper<F>(
     name: &str,
     action: Action,
