@@ -48,6 +48,17 @@ pub struct CuboidSpecChamferZHole {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub struct CuboidSpecAutoSize {
+    pub pos: P3,
+    pub align: CuboidAlign,
+    pub x_length: f32,
+    pub y_length: f32,
+    pub z_length: f32,
+    pub rot: R3,
+}
+
+
+#[derive(Debug, Clone, Copy)]
 pub enum CuboidAlign {
     Corner {
         cuboid: C3,
@@ -467,6 +478,30 @@ impl CuboidSpecTrait for CuboidSpecChamferZHole {
         canonical_spec.to_rect(upper_or_lower)
     }
 }
+
+
+impl From<CuboidSpecAutoSize> for CuboidSpec {
+    fn from(spec: CuboidSpecAutoSize) -> Self {
+        CuboidSpec {
+            size: spec.x_length.min(spec.y_length).min(spec.z_length) / 2.,
+            shapes: CuboidShapes::Cube,
+            pos: spec.pos,
+            align: spec.align,
+            x_length: spec.x_length,
+            y_length: spec.y_length,
+            z_length: spec.z_length,
+            rot: spec.rot,
+        }
+    }
+}
+
+impl CuboidSpecTrait for CuboidSpecAutoSize {
+    fn to_rect(&self, upper_or_lower: C1) -> Result<Rect, ScadDotsError> {
+        let canonical_spec = CuboidSpec::from(*self);
+        canonical_spec.to_rect(upper_or_lower)
+    }
+}
+
 
 impl CuboidShapes {
     fn get(self, upper_or_lower: C1) -> RectShapes {
