@@ -667,11 +667,26 @@ impl Plane {
         self.z_offset + self.xz_slope * x + self.yz_slope * y
     }
 
+    /// TODO this might be in the opposite direction of the conventional "normal". But flipping it
+    /// now would break stuff.
     pub fn normal(&self) -> V3 {
-        V3::new(self.xz_slope, self.yz_slope, 1.)
+        V3::new(self.xz_slope, self.yz_slope, 1.).normalize()
     }
 
     pub fn rot(&self) -> R3 {
         rotation_between(self.normal(), Axis::Z).unwrap_or(R3::identity())
+    }
+
+    pub fn offset(&self, dist_along_normal: f32) -> Plane {
+        let n_len = (self.xz_slope * self.xz_slope
+                     + self.yz_slope * self.yz_slope
+                     + 1.0)
+            .sqrt();
+
+        Plane {
+            z_offset: self.z_offset - dist_along_normal * n_len,
+            xz_slope: self.xz_slope,
+            yz_slope: self.yz_slope,
+        }
     }
 }
