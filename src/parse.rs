@@ -51,7 +51,7 @@ enum ScadThing {
     LinearExtrude {
         height: f32,
         center: bool,
-        convecity: f32, // misspelled in scad library!
+        convexity: f32,
         twist: f32,
         slices: f32,
         children: Vec<ScadThing>, // can it actually have more than 1 child?
@@ -153,11 +153,11 @@ impl ScadThing {
             ScadThing::Sphere(f) => vec![f],
             ScadThing::LinearExtrude {
                 height,
-                convecity,
+                convexity,
                 twist,
                 slices,
                 ..
-            } => vec![height, convecity, twist, slices],
+            } => vec![height, convexity, twist, slices],
             ScadThing::Polygon(ref points, convexity) => {
                 let mut v = flatten(points);
                 v.push(convexity);
@@ -379,9 +379,9 @@ named!(
             >> tag!("=")
             >> center: boolean
             >> tag!(",")
-            >> tag!("convecity")
+            >> tag!("convexity")
             >> tag!("=")
-            >> convecity: number
+            >> convexity: number
             >> tag!(",")
             >> tag!("twist")
             >> tag!("=")
@@ -397,7 +397,7 @@ named!(
             >> (ScadThing::LinearExtrude {
                 height,
                 center,
-                convecity,
+                convexity,
                 twist,
                 slices,
                 children,
