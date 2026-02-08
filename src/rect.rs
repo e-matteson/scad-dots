@@ -206,7 +206,7 @@ impl Rect {
         ])
     }
 
-    fn dots(&self) -> Vec<Dot> {
+    pub fn dots(&self) -> Vec<Dot> {
         C2::all_clockwise()
             .into_iter()
             .map(|c| self.dot(c))
