@@ -134,8 +134,8 @@ impl Dot {
     /// rotation, regardless of the rotation of the original dot. It will have
     /// the same size as the original dot. If shape is None, it will have the
     /// same shape as the original.
-    pub fn drop(&self, bottom_z: f32, shape: Option<DotShape>) -> Self {
-        self.drop_along(Axis::Z.into(), bottom_z, shape)
+    pub fn drop(&self, bottom_z: f32, align: DotAlign, shape: Option<DotShape>) -> Self {
+        self.drop_along(Axis::Z.into(), bottom_z, align, shape)
     }
 
     /// Like `Dot::drop()`, but more general: the new dot will be dropped in the
@@ -146,10 +146,11 @@ impl Dot {
         &self,
         direction: V3,
         bottom_z: f32,
+        align: DotAlign,
         shape: Option<DotShape>,
     ) -> Self {
         let pos = translate_p3_along_until(
-            self.pos(DotAlign::centroid()),
+            self.pos(align),
             direction,
             Axis::Z,
             bottom_z,
@@ -159,17 +160,17 @@ impl Dot {
         // Reset its rotation.
         Self::new(DotSpec {
             pos,
-            align: DotAlign::center_face(CubeFace::Z0),
+            align,
             size: self.size,
             rot: R3::identity(),
             shape: shape.unwrap_or(self.shape),
         })
     }
 
-    pub fn drop_to_plane(&self, plane: Plane, shape: Option<DotShape>) -> Self {
-        let pos = self.pos(DotAlign::center_face(CubeFace::Z0));
+    pub fn drop_to_plane(&self, plane: Plane, align: DotAlign, shape: Option<DotShape>) -> Self {
+        let pos = self.pos(align);
         let z = plane.z(pos.x, pos.y);
-        self.drop(z, shape)
+        self.drop(z, align, shape)
     }
 
     pub fn translate(&self, offset: V3) -> Self {

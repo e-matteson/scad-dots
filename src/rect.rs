@@ -3,7 +3,7 @@ use core::utils::{
 };
 use core::{
     chain_loop, drop_solid, mark, Dot, DotShape, DotSpec, MapDots, MinMaxCoord,
-    Tree,
+    Tree, DotAlign
 };
 use cuboid::{Cuboid, CuboidLink};
 
@@ -145,8 +145,8 @@ impl Rect {
         self.edge(axis).norm()
     }
 
-    pub fn drop_solid(&self, plane: Plane, shape: Option<DotShape>) -> Tree {
-        drop_solid(&self.dots(), plane, shape)
+    pub fn drop_solid(&self, plane: Plane, align: DotAlign, shape: Option<DotShape>) -> Tree {
+        drop_solid(&self.dots(), plane, align, shape)
     }
 
     /// For debugging. Return the union of 32 small spheres placed at each

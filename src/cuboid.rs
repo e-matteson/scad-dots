@@ -2,7 +2,7 @@ use core::utils::{
     midpoint, Axis, Corner1 as C1, Corner2 as C2, Corner3 as C3, CubeFace,
     Fraction, Plane, P3, R3, V3,
 };
-use core::{chain_loop, mark, Dot, DotShape, MapDots, MinMaxCoord, Tree};
+use core::{chain_loop, mark, Dot, DotShape, MapDots, MinMaxCoord, Tree, DotAlign};
 use errors::ScadDotsError;
 use post::{Post, PostLink};
 use rect::{Rect, RectAlign, RectLink, RectShapes, RectSpec};
@@ -369,13 +369,13 @@ impl Cuboid {
         }
     }
 
-    pub fn drop_to_plane(&self, plane: Plane) -> DroppedCuboid {
+    pub fn drop_to_plane(&self, plane: Plane, align: DotAlign) -> DroppedCuboid {
         DroppedCuboid {
             cuboid: *self,
-            p00: self.dot(C3::P000).drop_to_plane(plane, None),
-            p01: self.dot(C3::P010).drop_to_plane(plane, None),
-            p10: self.dot(C3::P100).drop_to_plane(plane, None),
-            p11: self.dot(C3::P110).drop_to_plane(plane, None),
+            p00: self.dot(C3::P000).drop_to_plane(plane, align, None),
+            p01: self.dot(C3::P010).drop_to_plane(plane, align, None),
+            p10: self.dot(C3::P100).drop_to_plane(plane, align, None),
+            p11: self.dot(C3::P110).drop_to_plane(plane, align, None),
         }
     }
 
