@@ -667,6 +667,10 @@ impl Plane {
         self.z_offset + self.xz_slope * x + self.yz_slope * y
     }
 
+    pub fn pos(&self, x: f32, y: f32) -> P3 {
+        P3::new(x, y, self.z(x, y))
+    }
+
     /// TODO this might be in the opposite direction of the conventional "normal". But flipping it
     /// now would break stuff.
     pub fn normal(&self) -> V3 {
