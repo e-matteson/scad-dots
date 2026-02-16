@@ -441,6 +441,15 @@ where
     }
 }
 
+impl<T> MapDots for Vec<T>
+where
+    T: MapDots,
+{
+    fn map_dots(&self, f: &dyn Fn(&Dot) -> Dot) -> Self {
+        self.iter().map(|t| t.map_dots(f)).collect()
+    }
+}
+
 impl MinMaxCoord for Dot {
     fn all_coords(&self, axis: Axis) -> Vec<f32> {
         C3::all()
