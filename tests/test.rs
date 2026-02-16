@@ -833,3 +833,40 @@ fn dot_fancy_translation2() {
         Ok(union![a, b, c])
     })
 }
+
+pub fn mark_plane(plane: Plane, x: f32, y: f32) -> Tree {
+    let z = plane.z(x, y);
+    let pos = P3::new(x, y, z);
+    mark(pos, 1.)
+}
+
+#[test]
+fn plane1() {
+    check_model("plane1", Action::Preview, || {
+        let plane = Plane {
+            z_offset: 0.,
+            xz_slope: 0.2,
+            yz_slope: 0.4,
+        };
+
+        let high_dot = Dot::new(DotSpec {
+            pos: P3::new(5., 5., 10.),
+            align: DotAlign::center_face(CubeFace::Z0),
+            size: 2.,
+            rot: R3::identity(),
+            shape: DotShape::Cube,
+        });
+
+        let low_dot = high_dot.project_to_plane(plane, DotAlign::center_face(CubeFace::Z0));
+
+        Ok(union![
+            Tree::from(high_dot),
+            Tree::from(low_dot),
+            mark_plane(plane, 0., 0.),
+            mark_plane(plane, 0., 10.),
+            mark_plane(plane, 10., 10.),
+            mark_plane(plane, 10., 0.),
+        ])
+    })
+}
+

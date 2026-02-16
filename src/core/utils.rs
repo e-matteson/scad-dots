@@ -693,4 +693,26 @@ impl Plane {
             yz_slope: self.yz_slope,
         }
     }
+
+    pub fn project(&self, pos: P3) -> P3 {
+        // (This function is AI-generated)
+        // The plane equation is: (xz_slope * x) + (yz_slope * y) - z + z_offset = 0
+        // Therefore, the coefficients of the normal vector are:
+        let a = self.xz_slope;
+        let b = self.yz_slope;
+        let c = -1.0;
+        let d = self.z_offset;
+
+        // Calculate the signed distance from the point to the plane:
+        // dist = (ax + by + cz + d) / sqrt(a^2 + b^2 + c^2)
+        let numerator = a * pos.x + b * pos.y + c * pos.z + d;
+        let denominator_sq = a * a + b * b + c * c;
+        let dist = numerator / denominator_sq.sqrt();
+
+        // The unit normal vector components
+        let n = V3::new(a, b, c) / denominator_sq.sqrt();
+
+        // To get the nearest point, move from 'pos' opposite to the normal direction
+        pos - n * dist
+    }
 }

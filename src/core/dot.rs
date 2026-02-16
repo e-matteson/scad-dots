@@ -173,6 +173,17 @@ impl Dot {
         self.drop(z, align, shape)
     }
 
+    pub fn project_to_plane(&self, plane: Plane, align: DotAlign) -> Self {
+        let new_pos = plane.project(self.pos(align));
+        Self::new(DotSpec {
+            pos: new_pos,
+            align,
+            size: self.size,
+            rot: plane.rot(),
+            shape: self.shape,
+        })
+    }
+
     pub fn translate(&self, offset: V3) -> Self {
         Self {
             shape: self.shape,
