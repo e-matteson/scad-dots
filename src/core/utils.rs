@@ -694,6 +694,18 @@ impl Plane {
         }
     }
 
+    /// Returns a new Plane parallel to this one that passes through `pos`.
+    pub fn parallel_at_point(&self, pos: P3) -> Plane {
+        // Solve for the z_offset that makes the plane equation true at 'pos'
+        let new_z_offset = pos.z - (self.xz_slope * pos.x) - (self.yz_slope * pos.y);
+
+        Plane {
+            z_offset: new_z_offset,
+            xz_slope: self.xz_slope,
+            yz_slope: self.yz_slope,
+        }
+    }
+
     pub fn project(&self, pos: P3) -> P3 {
         // (This function is AI-generated)
         // The plane equation is: (xz_slope * x) + (yz_slope * y) - z + z_offset = 0

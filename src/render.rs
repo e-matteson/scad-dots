@@ -84,6 +84,7 @@ impl TreeOperator {
             }
             TreeOperator::Color(color, _) => scad!(Color(color.rgb())),
             TreeOperator::Mirror(normal, _) => scad!(Mirror(*normal)),
+            TreeOperator::Translate(vector, _) => scad!(Translate(*vector)),
         }
     }
 
@@ -94,6 +95,7 @@ impl TreeOperator {
             | TreeOperator::Hull(ref v)
             | TreeOperator::Diff(ref v)
             | TreeOperator::Rotate(_, _, ref v)
+            | TreeOperator::Translate(_, ref v)
             | TreeOperator::Intersect(ref v) => v.clone(),
 
             TreeOperator::Color(_, ref tree)

@@ -1,5 +1,5 @@
-use core::utils::{ColorSpec, Plane, V3};
-use core::{Cylinder, Dot, DotShape, Extrusion, DotAlign};
+use core::utils::{ColorSpec, Plane, V3, unwrap_rot_axis, radians_to_degrees};
+use core::{Cylinder, Dot, DotShape, Extrusion, DotAlign, R3};
 
 #[derive(Debug, Clone)]
 pub enum Tree {
@@ -29,6 +29,7 @@ pub enum TreeOperator {
     Rotate(f32, V3, Vec<Tree>),
     Color(ColorSpec, Box<Tree>),
     Mirror(V3, Box<Tree>), // Mirrors across plane with the given normal vec
+    Translate(V3, Vec<Tree>),
 }
 
 #[macro_export]
@@ -129,6 +130,15 @@ impl Tree {
         ))
     }
 
+    pub fn rotate_r3<T>(rot: R3, tree_like: Vec<T>) -> Self
+    where
+        T: Into<Self>,
+    {
+        let axis = unwrap_rot_axis(rot).expect("Failed to get axis of rotation");
+        let degrees = -1. * radians_to_degrees(rot.angle());
+        Tree::rotate(degrees, axis, tree_like)
+    }
+
     pub fn mirror<S, T>(normal: S, tree_like: T) -> Self
     where
         T: Into<Self>,
@@ -139,6 +149,17 @@ impl Tree {
             Box::new(tree_like.into()),
         ))
     }
+
+    pub fn translate<T>(vector: V3, tree_like: Vec<T>) -> Self
+    where
+        T: Into<Self>,
+    {
+        Tree::Operator(TreeOperator::Translate(
+            vector,
+            tree_like.into_iter().map(|x| x.into()).collect(),
+        ))
+    }
+
 
     pub fn color<T>(color: ColorSpec, tree_like: T) -> Self
     where
